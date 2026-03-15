@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarvam AI Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        branddark: '#0f172a',
+                        brandteal: '#0d9488',
+                        brandamber: '#d97706',
+                        brandlight: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Infographic Container: Optimized for LinkedIn Portrait (approx 4:5 ratio) -->
+    <div class="bg-branddark text-brandlight w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden relative">
+        
+        <!-- Decorative Background Elements -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-brandteal rounded-full mix-blend-multiply filter blur-3xl opacity-20 transform translate-x-1/2 -translate-y-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-80 h-80 bg-brandamber rounded-full mix-blend-multiply filter blur-3xl opacity-20 transform -translate-x-1/2 translate-y-1/2"></div>
+
+        <div class="p-10 relative z-10">
+            
+            <!-- Header -->
+            <div class="text-center mb-10">
+                <div class="inline-block bg-brandteal text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-4">
+                    Open Source Release
+                </div>
+                <h1 class="text-4xl font-black tracking-tight mb-2 text-white">
+                    SARVAM AI <span class="text-brandteal text-3xl">x</span> EDGE COMPUTE
+                </h1>
+                <p class="text-gray-400 font-medium text-lg">Two foundational models changing localized AI.</p>
+            </div>
+
+            <!-- The Models -->
+            <div class="grid grid-cols-2 gap-6 mb-10">
+                <!-- Sarvam-1 -->
+                <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="bg-brandamber text-white p-2 rounded-lg">
+                            <i class="fa-solid fa-brain text-xl"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Sarvam-1</h2>
+                    </div>
+                    <div class="text-brandamber font-mono text-sm mb-2">2B Parameter LLM</div>
+                    <ul class="text-sm text-gray-300 space-y-2">
+                        <li><i class="fa-solid fa-check text-brandteal mr-2"></i>Outperforms 8B models in Indic languages</li>
+                        <li><i class="fa-solid fa-check text-brandteal mr-2"></i>Ultra-low latency inference</li>
+                        <li><i class="fa-solid fa-check text-brandteal mr-2"></i>Perfect for Edge Robotics & Pi</li>
+                    </ul>
+                </div>
+
+                <!-- Shuka -->
+                <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="bg-brandteal text-white p-2 rounded-lg">
+                            <i class="fa-solid fa-wave-square text-xl"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Shuka v1</h2>
+                    </div>
+                    <div class="text-brandteal font-mono text-sm mb-2">Native Audio-LLM</div>
+                    <ul class="text-sm text-gray-300 space-y-2">
+                        <li><i class="fa-solid fa-check text-brandamber mr-2"></i>6x faster than cascading systems</li>
+                        <li><i class="fa-solid fa-check text-brandamber mr-2"></i>Processes raw audio directly</li>
+                        <li><i class="fa-solid fa-check text-brandamber mr-2"></i>Captures spoken intent instantly</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- The Convergence -->
+            <div class="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-8 relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 text-9xl transform translate-x-1/4 -translate-y-1/4">
+                    <i class="fa-solid fa-atom"></i>
+                </div>
+                
+                <h3 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3">
+                    The Innovation Convergence
+                </h3>
+                
+                <div class="space-y-5">
+                    <div class="flex items-start gap-4">
+                        <div class="mt-1 bg-gray-700 text-gray-300 p-2 rounded-full w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-robot"></i></div>
+                        <div>
+                            <h4 class="font-bold text-white text-lg">Physical AI (PhyAI)</h4>
+                            <p class="text-sm text-gray-400">Offline, low-latency cognitive controllers enabling real-time edge robotics without cloud dependencies.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-4">
+                        <div class="mt-1 bg-gray-700 text-gray-300 p-2 rounded-full w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-om"></i></div>
+                        <div>
+                            <h4 class="font-bold text-white text-lg">Digitizing Vedic Logic</h4>
+                            <p class="text-sm text-gray-400">Native audio models capable of analyzing precise vibrational frequencies (Śikṣā) in Sanskrit mantras directly.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="mt-1 bg-gray-700 text-gray-300 p-2 rounded-full w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-microchip"></i></div>
+                        <div>
+                            <h4 class="font-bold text-white text-lg">Indigenous Quantum</h4>
+                            <p class="text-sm text-gray-400">Decoding profound philosophical texts to conceptually inspire new quantum frameworks based on Indian paradigms.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-8 text-gray-500 text-sm font-medium">
+                Deep dive into the architecture via the link in the comments.
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
