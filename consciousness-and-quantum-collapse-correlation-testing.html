@@ -855,8 +855,10 @@ async function loadFromFirebase(limit = 200) {
     const snap = await db.ref('sessions').get();
     if (!snap.exists()) return [];
     const arr = [];
-    snap.forEach(child => arr.push(child.val()));
-    // Sort newest first by endedAt
+    snap.forEach(child => {
+      const val = child.val();
+      if (val && val.testId) arr.push(val); // null guard
+    });
     arr.sort((a, b) => {
       const ta = a.endedAt || a.startedAt || '';
       const tb = b.endedAt || b.startedAt || '';
@@ -1611,6 +1613,8 @@ function buildCharts(sessions) {
 async function refreshArchive() {
   document.getElementById('histList').innerHTML = '<div class="h-empty">Loading…</div>';
   const sessions = await loadFromFirebase(300);
+  // Debug
+  console.log('Sessions loaded:', sessions.length, sessions.map(s => s.testId));
   document.getElementById('hCnt').textContent = `${sessions.length} session${sessions.length===1?'':'s'} globally`;
 
   // Agg
