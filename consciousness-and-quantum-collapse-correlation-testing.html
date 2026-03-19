@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observer Collapse Laboratory</title>
+<link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   RESET & VARS
+═══════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#040810;
+  --surface:#070d17;
+  --panel:#0a1220;
+  --border:#142030;
+  --border2:#1e3550;
+  --accent:#00cfff;
+  --accentg:#00ff99;
+  --dim:#152535;
+  --text:#b0cad8;
+  --muted:#3a5870;
+  --red:#ff2b50;
+  --green:#00ff99;
+  --yellow:#ffc300;
+  --blue:#1a6eff;
+  --font-mono:'Azeret Mono',monospace;
+  --font-display:'Orbitron',sans-serif;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-mono);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── Background noise/grid ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 15% 0%,rgba(0,100,200,0.07) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 60% at 85% 90%,rgba(0,180,100,0.05) 0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(0,207,255,0.025) 59px,rgba(0,207,255,0.025) 60px),
+    repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(0,207,255,0.025) 59px,rgba(0,207,255,0.025) 60px);
+  pointer-events:none;z-index:0;
+}
+
+/* ── Layout ── */
+.app{
+  position:relative;z-index:1;
+  max-width:780px;
+  margin:0 auto;
+  padding:24px 16px 60px;
+}
+
+/* ── Config Banner ── */
+#configBanner{
+  display:none;
+  background:rgba(255,195,0,0.08);
+  border:1px solid rgba(255,195,0,0.35);
+  border-radius:4px;
+  padding:14px 18px;
+  margin-bottom:20px;
+  font-size:11px;
+  letter-spacing:1.5px;
+  line-height:2;
+  color:var(--yellow);
+}
+#configBanner code{
+  background:rgba(255,195,0,0.15);
+  padding:2px 6px;
+  border-radius:2px;
+  font-family:var(--font-mono);
+}
+
+/* ── Header ── */
+.hdr{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:16px;margin-bottom:28px;
+}
+
+.hdr-left{}
+
+.lab-eyebrow{
+  font-size:9px;letter-spacing:6px;color:var(--muted);
+  text-transform:uppercase;margin-bottom:8px;
+}
+
+h1{
+  font-family:var(--font-display);
+  font-size:clamp(14px,3.5vw,22px);
+  font-weight:900;letter-spacing:2px;
+  color:var(--accent);
+  text-shadow:0 0 24px rgba(0,207,255,0.3);
+  line-height:1.35;
+}
+
+.hdr-sub{font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:6px;}
+
+.src-badge{
+  flex-shrink:0;text-align:right;
+  display:flex;flex-direction:column;align-items:flex-end;gap:5px;
+}
+
+.badge{
+  font-size:9px;letter-spacing:3px;padding:5px 12px;
+  border-radius:2px;border:1px solid;text-transform:uppercase;
+}
+.badge.live{border-color:var(--accentg);color:var(--accentg);background:rgba(0,255,153,0.07);animation:badgePulse 2.5s ease-in-out infinite;}
+.badge.fallback{border-color:var(--yellow);color:var(--yellow);background:rgba(255,195,0,0.07);}
+.badge.init{border-color:var(--muted);color:var(--muted);}
+.qrng-line{font-size:8px;letter-spacing:2px;color:var(--muted);}
+.qdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:5px;vertical-align:middle;}
+.qdot.live{background:var(--accentg);box-shadow:0 0 6px var(--accentg);}
+.qdot.fb{background:var(--yellow);}
+
+@keyframes badgePulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(0,255,153,0);}
+  50%{box-shadow:0 0 10px 2px rgba(0,255,153,0.18);}
+}
+
+/* ── Tabs ── */
+.tabs{
+  display:flex;gap:0;margin-bottom:20px;
+  border-bottom:1px solid var(--border);
+}
+.tab{
+  font-family:var(--font-mono);font-size:10px;
+  letter-spacing:3px;padding:9px 20px;
+  background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--muted);cursor:pointer;text-transform:uppercase;
+  transition:all 0.2s;
+}
+.tab:hover{color:var(--text);}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent);text-shadow:0 0 10px rgba(0,207,255,0.4);}
+
+.page{display:none;}
+.page.on{display:block;}
+
+/* ── Panel ── */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:20px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),var(--accentg),transparent);
+  opacity:0.15;
+}
+.plbl{
+  font-size:9px;letter-spacing:5px;color:var(--muted);
+  text-transform:uppercase;margin-bottom:14px;
+}
+
+/* ── ID entry ── */
+.id-entry{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;
+}
+.id-input{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:2px;
+  background:rgba(0,0,0,0.4);border:1px solid var(--border2);
+  border-radius:3px;padding:9px 14px;color:var(--text);
+  width:220px;outline:none;transition:border-color 0.2s;
+}
+.id-input:focus{border-color:var(--accent);}
+.id-input::placeholder{color:var(--muted);}
+.id-btn{
+  font-family:var(--font-display);font-size:9px;font-weight:700;
+  letter-spacing:3px;padding:9px 18px;border-radius:3px;cursor:pointer;
+  transition:all 0.2s;text-transform:uppercase;
+}
+.id-btn.primary{background:transparent;border:1px solid var(--accent);color:var(--accent);}
+.id-btn.primary:hover{background:var(--accent);color:#000;}
+.id-btn.secondary{background:transparent;border:1px solid var(--muted);color:var(--muted);}
+.id-btn.secondary:hover{border-color:var(--text);color:var(--text);}
+
+.active-id{
+  font-family:var(--font-display);font-size:14px;font-weight:700;
+  letter-spacing:2px;color:var(--accent);
+  text-shadow:0 0 12px rgba(0,207,255,0.4);
+}
+.active-id-sub{font-size:9px;letter-spacing:3px;color:var(--muted);margin-top:3px;}
+
+/* ── Experiment ── */
+.exp-layout{
+  display:grid;grid-template-columns:110px 1fr;gap:20px;align-items:center;
+}
+@media(max-width:480px){.exp-layout{grid-template-columns:1fr;justify-items:center;}}
+
+/* timer */
+.timer-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+#timerArc{
+  stroke:var(--accent);stroke-width:3;fill:none;
+  stroke-dasharray:283;stroke-dashoffset:0;stroke-linecap:round;
+  transition:stroke-dashoffset 0.07s linear,stroke 0.4s ease;
+  filter:drop-shadow(0 0 5px var(--accent));
+}
+.t-num{
+  position:absolute;
+  font-family:var(--font-display);font-size:24px;font-weight:900;
+  color:var(--accent);text-shadow:0 0 12px rgba(0,207,255,0.6);
+  transition:color 0.3s;
+}
+
+/* color box */
+.box-area{display:flex;flex-direction:column;gap:14px;}
+.box-row{display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+
+#colorBox{
+  width:150px;height:150px;border-radius:8px;
+  background:var(--blue);flex-shrink:0;
+  box-shadow:0 0 50px rgba(26,110,255,0.4),inset 0 0 20px rgba(255,255,255,0.05);
+  transition:background 0.15s,box-shadow 0.3s;
+  position:relative;
+}
+#colorBox::before{
+  content:'';position:absolute;inset:0;border-radius:8px;
+  background:linear-gradient(140deg,rgba(255,255,255,0.09) 0%,transparent 55%);
+  pointer-events:none;
+}
+@keyframes boxPop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+.pop{animation:boxPop 0.22s ease-out;}
+
+.cname{font-size:10px;letter-spacing:5px;color:var(--muted);text-transform:uppercase;transition:color 0.3s;}
+.rlbl{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:6px;}
+
+#instrBar{
+  font-size:11px;letter-spacing:1.5px;color:var(--muted);
+  line-height:1.8;min-height:40px;display:flex;align-items:center;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.blink{animation:blink 1.1s step-end infinite;}
+
+/* guess */
+.guess-section{display:flex;flex-direction:column;gap:10px;}
+.phase-lbl{font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.guess-row{display:flex;gap:10px;}
+
+.gbtn{
+  flex:1;padding:13px 0;border:2px solid;border-radius:3px;
+  font-family:var(--font-display);font-size:10px;font-weight:700;
+  letter-spacing:3px;cursor:pointer;background:transparent;
+  transition:all 0.18s;text-transform:uppercase;
+}
+.gbtn.r{border-color:var(--red);color:var(--red);}
+.gbtn.r:hover:not(:disabled){background:var(--red);color:#000;box-shadow:0 0 22px rgba(255,43,80,0.4);}
+.gbtn.r.sel{background:var(--red);color:#000;box-shadow:0 0 22px rgba(255,43,80,0.4);}
+.gbtn.g{border-color:var(--green);color:var(--green);}
+.gbtn.g:hover:not(:disabled){background:var(--green);color:#000;box-shadow:0 0 22px rgba(0,255,153,0.4);}
+.gbtn.g.sel{background:var(--green);color:#000;box-shadow:0 0 22px rgba(0,255,153,0.4);}
+.gbtn:disabled{opacity:0.2;cursor:not-allowed;}
+
+#resMsg{font-size:11px;letter-spacing:2px;min-height:18px;color:var(--muted);transition:color 0.3s;}
+#resMsg.hit{color:var(--green);}
+#resMsg.miss{color:var(--red);}
+#resMsg.yev{color:var(--yellow);}
+
+/* log dots */
+.log-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;}
+.ldot{
+  aspect-ratio:1;border-radius:3px;border:1px solid var(--dim);background:var(--dim);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:700;transition:all 0.3s;
+}
+.ldot.hit{background:rgba(0,255,153,0.1);border-color:var(--green);color:var(--green);}
+.ldot.miss{background:rgba(255,43,80,0.1);border-color:var(--red);color:var(--red);}
+.ldot.yev{background:rgba(255,195,0,0.1);border-color:var(--yellow);color:var(--yellow);}
+.ldot.skip{border-color:var(--muted);color:var(--muted);}
+@keyframes pulseC{0%,100%{box-shadow:0 0 0 0 rgba(0,207,255,0.4);}50%{box-shadow:0 0 0 5px rgba(0,207,255,0);}}
+.ldot.cur{border-color:var(--accent);animation:pulseC 1.2s ease-in-out infinite;}
+
+/* stats */
+.srow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+@media(max-width:450px){.srow{grid-template-columns:repeat(2,1fr);}}
+.sbox{text-align:center;padding:10px 4px;border:1px solid var(--border);border-radius:3px;background:rgba(0,0,0,0.2);}
+.sval{font-family:var(--font-display);font-size:20px;font-weight:900;}
+.sval.g{color:var(--green);text-shadow:0 0 10px rgba(0,255,153,0.35);}
+.sval.r{color:var(--red);text-shadow:0 0 10px rgba(255,43,80,0.35);}
+.sval.y{color:var(--yellow);}
+.sval.a{color:var(--accent);}
+.slbl{font-size:8px;letter-spacing:2px;color:var(--muted);margin-top:3px;line-height:1.4;text-transform:uppercase;}
+
+/* final */
+#finalPanel{display:none;}
+.f-score{font-family:var(--font-display);font-size:54px;font-weight:900;color:var(--accent);text-shadow:0 0 30px rgba(0,207,255,0.45);text-align:center;line-height:1;}
+.f-anti{text-align:center;font-size:12px;letter-spacing:4px;color:var(--muted);margin:6px 0 16px;}
+.f-verdict{font-size:12px;letter-spacing:1.5px;line-height:2;color:var(--text);text-align:center;margin-bottom:14px;}
+.f-verdict strong{color:var(--accentg);}
+.f-meta{
+  font-size:10px;letter-spacing:1.5px;line-height:2.2;color:var(--muted);
+  padding:12px 14px;border:1px solid var(--border);border-radius:3px;
+  background:rgba(0,0,0,0.3);margin-bottom:16px;word-break:break-all;
+}
+.f-meta span{color:var(--text);}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.abtn{
+  padding:12px 28px;background:transparent;font-family:var(--font-display);
+  font-size:10px;font-weight:700;letter-spacing:3px;cursor:pointer;
+  border-radius:3px;text-transform:uppercase;transition:all 0.2s;
+}
+.abtn.p{border:2px solid var(--accent);color:var(--accent);}
+.abtn.p:hover{background:var(--accent);color:#000;box-shadow:0 0 24px rgba(0,207,255,0.4);}
+.abtn.s{border:1px solid var(--muted);color:var(--muted);}
+.abtn.s:hover{border-color:var(--text);color:var(--text);}
+
+/* ════════════════════
+   ARCHIVE PAGE
+════════════════════ */
+.agg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+@media(max-width:440px){.agg-grid{grid-template-columns:repeat(2,1fr);}}
+.agg-cell{text-align:center;padding:12px 4px;border:1px solid var(--border);border-radius:3px;background:rgba(0,0,0,0.2);}
+.agg-val{font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--accent);}
+.agg-lbl{font-size:8px;letter-spacing:3px;color:var(--muted);margin-top:3px;text-transform:uppercase;}
+
+/* Charts */
+.chart-wrap{position:relative;height:200px;margin-top:4px;}
+
+/* Session list */
+.hist-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.hist-cnt{font-size:10px;letter-spacing:3px;color:var(--muted);}
+.clr-btn{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:3px;
+  padding:5px 12px;border:1px solid var(--red);color:var(--red);
+  background:transparent;border-radius:2px;cursor:pointer;text-transform:uppercase;
+  transition:all 0.2s;
+}
+.clr-btn:hover{background:rgba(255,43,80,0.1);}
+
+#histList{max-height:500px;overflow-y:auto;padding-right:2px;}
+#histList::-webkit-scrollbar{width:3px;}
+#histList::-webkit-scrollbar-track{background:transparent;}
+#histList::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px;}
+
+.h-empty{text-align:center;color:var(--muted);font-size:11px;letter-spacing:3px;padding:40px 0;line-height:2;}
+
+.hitem{
+  border:1px solid var(--border);border-radius:4px;padding:14px;
+  margin-bottom:8px;background:rgba(0,0,0,0.18);
+  transition:border-color 0.2s;
+}
+.hitem:hover{border-color:var(--border2);}
+.h-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.h-id{font-family:var(--font-display);font-size:12px;color:var(--accent);letter-spacing:2px;}
+.h-date{font-size:9px;color:var(--muted);letter-spacing:2px;}
+.h-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.pill{font-size:9px;letter-spacing:2px;padding:3px 8px;border-radius:2px;border:1px solid;}
+.pill.g{border-color:var(--green);color:var(--green);background:rgba(0,255,153,0.06);}
+.pill.r{border-color:var(--red);color:var(--red);background:rgba(255,43,80,0.06);}
+.pill.y{border-color:var(--yellow);color:var(--yellow);background:rgba(255,195,0,0.06);}
+.pill.a{border-color:var(--accent);color:var(--accent);background:rgba(0,207,255,0.06);}
+.pill.m{border-color:var(--muted);color:var(--muted);}
+
+.mini-bar{display:flex;gap:3px;margin-top:8px;}
+.mb{width:20px;height:6px;border-radius:2px;opacity:0.7;}
+.mb.hit{background:var(--green);}
+.mb.miss{background:var(--red);}
+.mb.yev{background:var(--yellow);}
+.mb.skip{background:var(--muted);opacity:0.35;}
+.h-src{font-size:8px;letter-spacing:2px;color:var(--muted);margin-top:6px;}
+
+/* loading overlay */
+#loadOverlay{
+  position:fixed;inset:0;background:var(--bg);z-index:999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+}
+.ld-logo{
+  font-family:var(--font-display);font-size:16px;font-weight:900;
+  letter-spacing:4px;color:var(--accent);text-shadow:0 0 20px rgba(0,207,255,0.4);
+}
+.ld-bar{width:200px;height:2px;background:var(--dim);border-radius:2px;overflow:hidden;}
+.ld-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accentg));border-radius:2px;animation:ldAnim 1.6s ease-in-out infinite;}
+@keyframes ldAnim{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
+.ld-txt{font-size:10px;letter-spacing:3px;color:var(--muted);}
+
+/* firebase status chip */
+.fb-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:9px;letter-spacing:2px;color:var(--muted);
+  padding:4px 10px;border:1px solid var(--border);border-radius:2px;
+}
+.fb-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);}
+.fb-dot.ok{background:var(--accentg);box-shadow:0 0 5px var(--accentg);}
+.fb-dot.err{background:var(--red);}
+
+/* ── Confidence slider ── */
+.conf-wrap{
+  display:none; /* shown only during guess phase */
+  flex-direction:column;gap:8px;
+  padding:12px 0 4px;
+  border-top:1px solid var(--border);
+  margin-top:10px;
+}
+.conf-wrap.visible{display:flex;}
+
+.conf-header{
+  display:flex;align-items:center;justify-content:space-between;
+}
+.conf-label{
+  font-size:9px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;
+}
+.conf-val{
+  font-family:var(--font-display);font-size:16px;font-weight:700;
+  color:var(--accent);text-shadow:0 0 10px rgba(0,207,255,0.4);
+  min-width:48px;text-align:right;
+  transition:color 0.3s;
+}
+.conf-source{
+  font-size:8px;letter-spacing:3px;color:var(--muted);
+  padding:2px 8px;border:1px solid var(--border);border-radius:2px;
+}
+
+/* slider track */
+.conf-slider-wrap{position:relative;}
+input[type=range]#confSlider{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;
+  background:linear-gradient(
+    90deg,
+    var(--accent) 0%,
+    var(--accent) var(--fill,50%),
+    var(--dim)    var(--fill,50%),
+    var(--dim)    100%
+  );
+  transition:background 0.05s;
+}
+input[type=range]#confSlider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 12px rgba(0,207,255,0.6);
+  border:2px solid var(--bg);
+  transition:transform 0.15s,box-shadow 0.15s;
+}
+input[type=range]#confSlider::-webkit-slider-thumb:hover{
+  transform:scale(1.2);
+  box-shadow:0 0 20px rgba(0,207,255,0.8);
+}
+input[type=range]#confSlider::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent);border:2px solid var(--bg);
+}
+
+/* tick marks under slider */
+.conf-ticks{
+  display:flex;justify-content:space-between;
+  padding:0 2px;margin-top:4px;
+}
+.conf-ticks span{
+  font-size:8px;color:var(--muted);letter-spacing:1px;
+}
+
+/* ── Mode selector ── */
+.mode-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:8px;
+  margin-top:4px;
+}
+@media(max-width:500px){.mode-grid{grid-template-columns:1fr;}}
+
+.mode-card{
+  border:1px solid var(--border);border-radius:4px;
+  padding:12px 14px;cursor:pointer;
+  background:rgba(0,0,0,0.2);
+  transition:all 0.18s;position:relative;
+}
+.mode-card:hover{border-color:var(--border2);}
+.mode-card.selected{
+  border-color:var(--accent);
+  background:rgba(0,207,255,0.06);
+  box-shadow:0 0 12px rgba(0,207,255,0.12);
+}
+.mode-card-tag{
+  font-size:8px;letter-spacing:4px;color:var(--muted);
+  text-transform:uppercase;margin-bottom:5px;
+}
+.mode-card-name{
+  font-family:var(--font-display);font-size:12px;font-weight:700;
+  letter-spacing:2px;color:var(--text);margin-bottom:6px;
+}
+.mode-card.selected .mode-card-name{color:var(--accent);}
+.mode-card-desc{
+  font-size:9px;letter-spacing:1px;color:var(--muted);
+  line-height:1.7;
+}
+.mode-card-timing{
+  font-size:9px;letter-spacing:2px;margin-top:6px;
+  padding:4px 8px;border-radius:2px;border:1px solid var(--border);
+  display:inline-block;color:var(--muted);
+}
+.mode-card.selected .mode-card-timing{
+  border-color:var(--accent);color:var(--accent);
+}
+.mode-selected-display{
+  font-family:var(--font-display);font-size:12px;font-weight:700;
+  letter-spacing:2px;color:var(--accent);
+  text-shadow:0 0 10px rgba(0,207,255,0.4);
+}
+.mode-badge{
+  display:inline-block;font-size:8px;letter-spacing:3px;
+  padding:3px 8px;border-radius:2px;border:1px solid var(--accent);
+  color:var(--accent);background:rgba(0,207,255,0.07);
+  margin-left:8px;vertical-align:middle;
+}
+/* EEG hook placeholder */
+.eeg-hook{
+  display:flex;align-items:center;gap:8px;
+  font-size:9px;letter-spacing:2px;color:var(--muted);
+  padding:6px 10px;border:1px dashed var(--border);border-radius:2px;
+  margin-top:2px;
+}
+.eeg-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadOverlay">
+  <div class="ld-logo">OCL · OBSERVER COLLAPSE LAB</div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+  <div class="ld-txt" id="ldTxt">INITIALIZING…</div>
+</div>
+
+<div class="app">
+
+  <!-- Config warning banner -->
+  <div id="configBanner">
+    ⚠ FIREBASE NOT CONFIGURED — Data will not be saved.<br>
+    Open <code>index.html</code> and fill in your Firebase config at the top of the &lt;script&gt; section.<br>
+    Get free credentials at <code>console.firebase.google.com</code> → New Project → Firestore Database → Web App.
+  </div>
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="lab-eyebrow">Observer Collapse Laboratory · v3.0</div>
+      <h1>EXPECTATION<br>ANTI-CORRELATION<br>EXPERIMENT</h1>
+      <div class="hdr-sub">True quantum randomness · Global persistent archive · Open data</div>
+    </div>
+    <div class="src-badge">
+      <div class="badge init" id="srcBadge">⬤ &nbsp;INIT</div>
+      <div class="qrng-line"><span class="qdot" id="qDot"></span><span id="qLbl">Contacting ANU QRNG…</span></div>
+      <div class="fb-chip" id="fbChip"><div class="fb-dot" id="fbDot"></div><span id="fbLbl">Firebase…</span></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab on" onclick="goTab('exp')">EXPERIMENT</button>
+    <button class="tab" onclick="goTab('archive')">GLOBAL ARCHIVE</button>
+  </div>
+
+  <!-- ══ EXPERIMENT PAGE ══ -->
+  <div class="page on" id="page-exp">
+
+    <!-- Participant ID panel -->
+    <div class="panel">
+      <div class="plbl">Participant Identifier</div>
+      <div id="idSetupArea">
+        <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:12px;line-height:1.8;">
+          Enter an existing ID to continue under your previous sessions, or generate a new one.<br>
+          Leave blank to auto-generate a new ID.
+        </div>
+        <div class="id-entry">
+          <input class="id-input" id="idInput" placeholder="e.g. QP-7F3A or leave blank" maxlength="24" />
+          <button class="id-btn primary" onclick="setParticipantId()">USE THIS ID</button>
+          <button class="id-btn secondary" onclick="genNewId()">GENERATE NEW</button>
+        </div>
+      </div>
+      <div id="idActiveArea" style="display:none;">
+        <div class="active-id" id="activeIdDisplay">—</div>
+        <div class="active-id-sub">YOUR PARTICIPANT ID — share this to continue later</div>
+        <div style="margin-top:10px;">
+          <button class="id-btn secondary" onclick="changeId()" style="font-size:9px;padding:6px 14px;">CHANGE ID</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode selector -->
+    <div class="panel" id="modeSelectorPanel">
+      <div class="plbl">Experiment Mode</div>
+      <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px;line-height:1.8;">
+        Select when the quantum random number is drawn relative to your click.
+        Each mode tests a different aspect of the observer-collapse hypothesis.
+      </div>
+      <div class="mode-grid">
+
+        <div class="mode-card selected" id="modeCard-POST" onclick="selectMode('POST')">
+          <div class="mode-card-tag">Mode 1</div>
+          <div class="mode-card-name">POST</div>
+          <div class="mode-card-desc">QRNG drawn at observe phase start. Outcome fixed before you guess. Tests anti-correlation with a pre-determined result.</div>
+          <div class="mode-card-timing">QRNG → observe → GUESS → reveal</div>
+        </div>
+
+        <div class="mode-card" id="modeCard-PRE" onclick="selectMode('PRE')">
+          <div class="mode-card-tag">Mode 2</div>
+          <div class="mode-card-name">PRE</div>
+          <div class="mode-card-desc">You guess first, QRNG drawn after click. Tests whether expectation influences quantum collapse at the moment it occurs.</div>
+          <div class="mode-card-timing">observe → GUESS → QRNG → reveal</div>
+        </div>
+
+        <div class="mode-card" id="modeCard-SIMULTANEOUS" onclick="selectMode('SIMULTANEOUS')">
+          <div class="mode-card-tag">Mode 3</div>
+          <div class="mode-card-name">SIMULTANEOUS</div>
+          <div class="mode-card-desc">QRNG drawn at the exact tick of your click. Conscious decision and quantum event co-occur in the same moment.</div>
+          <div class="mode-card-timing">observe → [GUESS + QRNG] → reveal</div>
+        </div>
+
+        <div class="mode-card" id="modeCard-BLIND" onclick="selectMode('BLIND')">
+          <div class="mode-card-tag">Mode 4</div>
+          <div class="mode-card-name">BLIND</div>
+          <div class="mode-card-desc">QRNG drawn at a random hidden moment during observe or guess phase. Neither you nor the app knows when. Pure baseline.</div>
+          <div class="mode-card-timing">QRNG at random t → observe → GUESS → reveal</div>
+        </div>
+
+        <div class="mode-card" id="modeCard-DELAYED" onclick="selectMode('DELAYED')">
+          <div class="mode-card-tag">Mode 5</div>
+          <div class="mode-card-name">DELAYED</div>
+          <div class="mode-card-desc">QRNG drawn at observe start, result hidden for 5s after your click before revealing. Tests if revelation moment matters.</div>
+          <div class="mode-card-timing">QRNG → observe → GUESS → 5s delay → reveal</div>
+        </div>
+
+      </div>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div style="font-size:9px;letter-spacing:3px;color:var(--muted);">ACTIVE MODE:</div>
+        <div class="mode-selected-display" id="modeSelectedDisplay">POST</div>
+        <div class="mode-badge" id="modeBadge">QRNG BEFORE GUESS</div>
+      </div>
+    </div>
+
+    <!-- Experiment -->
+    <div class="panel">
+      <div class="plbl">Quantum State Observer</div>
+      <div class="exp-layout">
+        <div class="timer-wrap">
+          <svg width="100" height="100" viewBox="0 0 100 100" style="transform:rotate(-90deg)">
+            <circle cx="50" cy="50" r="45" stroke="#142030" stroke-width="3" fill="none"/>
+            <circle id="timerArc" cx="50" cy="50" r="45"/>
+          </svg>
+          <span class="t-num" id="tNum">–</span>
+        </div>
+        <div class="box-area">
+          <div class="box-row">
+            <div id="colorBox"></div>
+            <div>
+              <div class="cname" id="cname">IDLE STATE</div>
+              <div class="rlbl" id="rlbl">Round — / 10</div>
+              <div style="margin-top:10px;font-size:9px;letter-spacing:2px;color:var(--muted);" id="testIdLine">—</div>
+            </div>
+          </div>
+          <div id="instrBar" class="blink">INITIALIZING…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guess -->
+    <div class="panel">
+      <div class="plbl">Expectation Input</div>
+      <div class="guess-section">
+        <div class="phase-lbl" id="phaseLbl">—</div>
+        <div class="guess-row">
+          <button class="gbtn r" id="btnR" onclick="guess('red')"   disabled>RED</button>
+          <button class="gbtn g" id="btnG" onclick="guess('green')" disabled>GREEN</button>
+        </div>
+
+        <!-- Confidence slider — shown during guess phase only -->
+        <div class="conf-wrap" id="confWrap">
+          <div class="conf-header">
+            <div>
+              <div class="conf-label">Confidence / Attention</div>
+              <div style="font-size:8px;letter-spacing:2px;color:var(--muted);margin-top:3px;">
+                How strongly do you expect your chosen color?
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <div class="conf-val" id="confVal">50%</div>
+              <div class="conf-source" id="confSource">SLIDER</div>
+            </div>
+          </div>
+          <div class="conf-slider-wrap">
+            <input type="range" id="confSlider" min="0" max="100" value="50"
+              oninput="onSliderMove(this.value)" />
+          </div>
+          <div class="conf-ticks">
+            <span>0% · UNCERTAIN</span>
+            <span>50%</span>
+            <span>CERTAIN · 100%</span>
+          </div>
+          <!-- ══ EEG HOOK — wire here when device is ready ══
+               Replace slider value with EEG attention output (0–100).
+               Set confSource to 'EEG' and disable the slider.
+               See: connectEEG() in script below.
+          -->
+          <div class="eeg-hook">
+            <div class="eeg-dot" id="eegDot"></div>
+            <span id="eegStatus">EEG device · not connected · slider active</span>
+          </div>
+        </div>
+
+        <div id="resMsg">—</div>
+      </div>
+    </div>
+
+    <!-- Round log + stats -->
+    <div class="panel">
+      <div class="plbl">Round Log</div>
+      <div class="log-grid" id="logGrid"></div>
+      <div class="srow">
+        <div class="sbox"><div class="sval g" id="sH">0</div><div class="slbl">Confirmed</div></div>
+        <div class="sbox"><div class="sval r" id="sM">0</div><div class="slbl">Violated</div></div>
+        <div class="sbox"><div class="sval y" id="sY">0</div><div class="slbl">Anomalies</div></div>
+        <div class="sbox"><div class="sval a" id="sA">—</div><div class="slbl">Anti-Corr %</div></div>
+      </div>
+    </div>
+
+    <!-- Final result -->
+    <div class="panel" id="finalPanel">
+      <div class="plbl">Session Result</div>
+      <div class="f-score" id="fScore">–</div>
+      <div class="f-anti" id="fAnti">—</div>
+      <div class="f-verdict" id="fVerdict"></div>
+      <div class="f-meta" id="fMeta"></div>
+      <div class="btn-row">
+        <button class="abtn p" onclick="restart()">↺ &nbsp;NEW SESSION</button>
+        <button class="abtn s" onclick="goTab('archive')">VIEW GLOBAL ARCHIVE →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ ARCHIVE PAGE ══ -->
+  <div class="page" id="page-archive">
+
+    <!-- Aggregate stats -->
+    <div class="panel">
+      <div class="plbl">Global Aggregate — All Sessions Ever</div>
+      <div class="agg-grid">
+        <div class="agg-cell"><div class="agg-val" id="aSess">—</div><div class="agg-lbl">Sessions</div></div>
+        <div class="agg-cell"><div class="agg-val" id="aRnd">—</div><div class="agg-lbl">Scored Rounds</div></div>
+        <div class="agg-cell"><div class="agg-val" id="aAnti">—</div><div class="agg-lbl">Avg Anti-Corr</div></div>
+        <div class="agg-cell"><div class="agg-val" id="aHit">—</div><div class="agg-lbl">Total Hits</div></div>
+        <div class="agg-cell"><div class="agg-val" id="aMiss">—</div><div class="agg-lbl">Total Misses</div></div>
+        <div class="agg-cell"><div class="agg-val" id="aYel">—</div><div class="agg-lbl">Anomalies</div></div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="panel">
+      <div class="plbl">Anti-Correlation Distribution — All Sessions</div>
+      <div class="chart-wrap"><canvas id="chartAnti"></canvas></div>
+    </div>
+
+    <div class="panel">
+      <div class="plbl">Sessions Over Time</div>
+      <div class="chart-wrap"><canvas id="chartTime"></canvas></div>
+    </div>
+
+    <!-- Session list -->
+    <div class="panel">
+      <div class="plbl">Session Archive</div>
+      <div class="hist-hdr">
+        <div class="hist-cnt" id="hCnt">Loading…</div>
+        <button class="clr-btn" onclick="refreshArchive()">↺ REFRESH</button>
+      </div>
+      <div id="histList"><div class="h-empty">Loading from Firebase…</div></div>
+    </div>
+
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  ★ STEP 1 — PASTE YOUR FIREBASE CONFIG HERE
+//  Where to get it:
+//    console.firebase.google.com
+//    → your project → Project Settings (gear icon)
+//    → "Your apps" section → Web app → SDK setup & config
+//    → copy the firebaseConfig object values below
+// ══════════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "RANDOMSDSREHRDFD#$%^$DFFGDG_U78",
+  authDomain:        "quantum-expectation-experiment.firebaseapp.com",
+  databaseURL:       "https://quantum-expectation-experiment-default-rtdb.firebaseio.com",
+  projectId:         "quantum-expectation-experiment",
+  storageBucket:     "quantum-expectation-experiment.firebasestorage.app",
+  messagingSenderId: "12256110978",
+  appId:             "7657657Erandom",
+  measurementId:     "G-rando,"
+};
+//  ★ STEP 2 — databaseURL is required for Realtime DB.
+//  Format: https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com
+//  Find it: Firebase console → Realtime Database → top of the data panel
+// ══════════════════════════════════════════════════════════
+
+const CONFIGURED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+
+// ── Firebase Realtime Database init ───────────────────────
+let db = null;
+function initFirebase() {
+  if (!CONFIGURED) {
+    setFbStatus('err', 'Not configured — see README');
+    document.getElementById('configBanner').style.display = 'block';
+    return;
+  }
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    // Connectivity check
+    db.ref('.info/connected').on('value', snap => {
+      if (snap.val()) setFbStatus('ok', 'Realtime DB connected');
+      else setFbStatus('err', 'DB offline');
+    });
+  } catch(e) {
+    setFbStatus('err', 'Init failed: ' + e.message);
+  }
+}
+
+function setFbStatus(state, msg) {
+  document.getElementById('fbDot').className = 'fb-dot ' + state;
+  document.getElementById('fbLbl').textContent = msg;
+}
+
+// Save session — writes to /sessions/<testId>/
+async function saveToFirebase(record) {
+  if (!db || !CONFIGURED) return false;
+  try {
+    await db.ref('sessions/' + record.testId).set(record);
+    return true;
+  } catch(e) { console.error('DB save error', e); return false; }
+}
+
+// Load sessions — reads /sessions/, returns array newest-first
+async function loadFromFirebase(limit = 200) {
+  if (!db || !CONFIGURED) return [];
+  try {
+    const snap = await db.ref('sessions').get();
+    if (!snap.exists()) return [];
+    const arr = [];
+    snap.forEach(child => arr.push(child.val()));
+    // Sort newest first by endedAt
+    arr.sort((a, b) => {
+      const ta = a.endedAt || a.startedAt || '';
+      const tb = b.endedAt || b.startedAt || '';
+      return tb.localeCompare(ta);
+    });
+    return arr.slice(0, limit);
+  } catch(e) {
+    console.error('DB load error', e);
+    return [];
+  }
+}
+
+// ── QRNG ─────────────────────────────────────────────────
+let qBuf = [], qSrc = 'init', qFetching = false;
+const QRNG_PROXIES = [
+  'https://corsproxy.io/?url=' + encodeURIComponent('https://qrng.anu.edu.au/API/jsonI.php?length=64&type=uint8'),
+  'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://qrng.anu.edu.au/API/jsonI.php?length=64&type=uint8'),
+];
+
+async function fetchQRNG() {
+  if (qFetching) return;
+  qFetching = true;
+  let ok = false;
+  for (const url of QRNG_PROXIES) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
+      const j = await r.json();
+      if (j?.success && Array.isArray(j.data) && j.data.length) {
+        qBuf.push(...j.data); setQSrc('quantum'); ok = true; break;
+      }
+    } catch {}
+  }
+  if (!ok) {
+    const a = new Uint8Array(64); crypto.getRandomValues(a);
+    qBuf.push(...a); setQSrc('crypto');
+  }
+  qFetching = false;
+}
+
+function setQSrc(s) {
+  qSrc = s;
+  const dot = document.getElementById('qDot');
+  const lbl = document.getElementById('qLbl');
+  const badge = document.getElementById('srcBadge');
+  if (s === 'quantum') {
+    dot.className = 'qdot live';
+    lbl.textContent = 'ANU QRNG · vacuum fluctuation source';
+    badge.className = 'badge live';
+    badge.innerHTML = '⬤ &nbsp;QUANTUM LIVE';
+  } else {
+    dot.className = 'qdot fb';
+    lbl.textContent = 'Crypto-random fallback (QRNG unavailable)';
+    badge.className = 'badge fallback';
+    badge.innerHTML = '⚠ &nbsp;CRYPTO FALLBACK';
+  }
+}
+
+async function getRandByte() {
+  if (qBuf.length < 8) await fetchQRNG();
+  if (!qBuf.length) { const a = new Uint8Array(1); crypto.getRandomValues(a); return a[0]; }
+  return qBuf.shift();
+}
+
+async function randColor() {
+  const b = await getRandByte();
+  if (b <= 114) return 'red';
+  if (b <= 228) return 'green';
+  return 'yellow';
+}
+
+// ── Participant ID ────────────────────────────────────────
+let participantId = null;
+
+function genIdStr() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = 'QP-';
+  for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+function setParticipantId() {
+  const v = document.getElementById('idInput').value.trim().toUpperCase() || genIdStr();
+  applyId(v);
+}
+
+function genNewId() {
+  applyId(genIdStr());
+}
+
+function applyId(id) {
+  participantId = id;
+  document.getElementById('idSetupArea').style.display = 'none';
+  document.getElementById('idActiveArea').style.display = 'block';
+  document.getElementById('activeIdDisplay').textContent = id;
+  localStorage.setItem('qex_pid', id);
+  // ── START experiment as soon as ID is confirmed ──
+  if (S.phase === 'idle') {
+    initS();
+    S.participantId = id;
+    setBox('blue');
+    buildLog();
+    updStats();
+    setInstr('Participant ID set. Starting experiment…', true);
+    setTimeout(startObserve, 1200);
+  }
+}
+
+function changeId() {
+  document.getElementById('idSetupArea').style.display = 'block';
+  document.getElementById('idActiveArea').style.display = 'none';
+  document.getElementById('idInput').value = '';
+}
+
+// ══════════════════════════════════════════════════════════
+//  CONFIDENCE / ATTENTION INPUT
+//  Source: 'slider' (default) | 'eeg' (when device connected)
+// ══════════════════════════════════════════════════════════
+
+let confValue = 50;        // 0–100, captured at moment of click
+let confSource = 'slider'; // 'slider' | 'eeg'
+
+function onSliderMove(val) {
+  confValue = parseInt(val);
+  document.getElementById('confVal').textContent = confValue + '%';
+  // Update slider fill via CSS variable
+  document.getElementById('confSlider').style.setProperty('--fill', confValue + '%');
+  // Colour shift: low=muted, mid=accent, high=green
+  const el = document.getElementById('confVal');
+  if (confValue >= 75) el.style.color = 'var(--accentg)';
+  else if (confValue <= 25) el.style.color = 'var(--muted)';
+  else el.style.color = 'var(--accent)';
+}
+
+function showConfSlider(show) {
+  document.getElementById('confWrap').classList.toggle('visible', show);
+  if (show) {
+    // Reset slider to 50 each round unless EEG is driving it
+    if (confSource === 'slider') {
+      document.getElementById('confSlider').value = 50;
+      onSliderMove(50);
+    }
+  }
+}
+
+// ══ EEG HOOK ════════════════════════════════════════════
+// When your EEG device is ready, call connectEEG() to take over
+// the attention value. The slider will disable and EEG streams live.
+//
+// function connectEEG() {
+//   confSource = 'eeg';
+//   document.getElementById('confSource').textContent = 'EEG';
+//   document.getElementById('eegDot').classList.add('live');
+//   document.getElementById('eegStatus').textContent = 'EEG device · connected · streaming';
+//   document.getElementById('confSlider').disabled = true;
+//
+//   // Poll or subscribe to your EEG SDK here, e.g.:
+//   // eegDevice.on('attention', (val) => {
+//   //   confValue = val; // 0–100
+//   //   document.getElementById('confSlider').value = val;
+//   //   onSliderMove(val);
+//   // });
+// }
+// ══════════════════════════════════════════════════════════
+function genTestId() {
+  const d = new Date();
+  const dt = d.getFullYear().toString().slice(2)
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0');
+  const rnd = Math.random().toString(36).slice(2,6).toUpperCase();
+  return `QEX-${dt}-${rnd}`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  EXPERIMENT MODES
+// ══════════════════════════════════════════════════════════
+const MODES = {
+  POST:         { label:'POST',         badge:'QRNG BEFORE GUESS',    collapseOffsetSign: -1 },
+  PRE:          { label:'PRE',          badge:'QRNG AFTER GUESS',     collapseOffsetSign: +1 },
+  SIMULTANEOUS: { label:'SIMULTANEOUS', badge:'QRNG AT CLICK MOMENT', collapseOffsetSign:  0 },
+  BLIND:        { label:'BLIND',        badge:'QRNG AT RANDOM TIME',  collapseOffsetSign: null },
+  DELAYED:      { label:'DELAYED',      badge:'5s REVEAL DELAY',      collapseOffsetSign: -1 },
+};
+let currentMode = 'POST';
+
+function selectMode(mode) {
+  currentMode = mode;
+  Object.keys(MODES).forEach(m =>
+    document.getElementById('modeCard-'+m).classList.toggle('selected', m === mode)
+  );
+  document.getElementById('modeSelectedDisplay').textContent = MODES[mode].label;
+  document.getElementById('modeBadge').textContent = MODES[mode].badge;
+}
+
+// ── Experiment State ──────────────────────────────────────
+const TOT = 10;
+const T_OBS = 2000, T_GUESS = 10000, T_REV = 2800, T_DELAY = 5000;
+const CSS_MAP = {
+  blue:   { bg:'#1a5dff', sh:'rgba(26,93,255,0.45)',   nm:'IDLE · BLUE'     },
+  red:    { bg:'#ff1a3a', sh:'rgba(255,26,58,0.5)',    nm:'STATE · RED'     },
+  green:  { bg:'#00e87a', sh:'rgba(0,232,122,0.5)',   nm:'STATE · GREEN'   },
+  yellow: { bg:'#ffc300', sh:'rgba(255,195,0,0.5)',   nm:'ANOMALY · YELLOW' },
+};
+
+let S = {};
+
+function initS() {
+  S = {
+    testId:         genTestId(),
+    participantId:  participantId,
+    experimentMode: currentMode,
+    round:0, hits:0, misses:0, yellows:0, skips:0,
+    curColor:'blue', nextColor:null, userGuess:null,
+    phase:'idle',
+    log:[], startedAt: new Date().toISOString(), endedAt:null,
+    attentionValues: [],
+    attentionSource: 'slider',
+    appVersion: '3.2',
+  };
+  document.getElementById('testIdLine').textContent =
+    'TEST: ' + S.testId + '  ·  MODE: ' + currentMode;
+}
+
+// ── UI helpers ────────────────────────────────────────────
+function setBox(c) {
+  const el = document.getElementById('colorBox');
+  const m = CSS_MAP[c];
+  el.style.background = m.bg;
+  el.style.boxShadow = `0 0 55px ${m.sh},inset 0 0 20px rgba(255,255,255,0.06)`;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  document.getElementById('cname').textContent = m.nm;
+}
+
+function setInstr(html, bl=false) {
+  const el = document.getElementById('instrBar');
+  el.innerHTML = html; el.classList.toggle('blink', bl);
+}
+
+function setBtns(on) {
+  document.getElementById('btnR').disabled = !on;
+  document.getElementById('btnG').disabled = !on;
+}
+
+function clrSel() {
+  document.getElementById('btnR').classList.remove('sel');
+  document.getElementById('btnG').classList.remove('sel');
+}
+
+function setRes(t, cls='') {
+  const el = document.getElementById('resMsg');
+  el.textContent = t; el.className = cls;
+}
+
+function updStats() {
+  document.getElementById('sH').textContent = S.hits;
+  document.getElementById('sM').textContent = S.misses;
+  document.getElementById('sY').textContent = S.yellows;
+  const sc = S.hits + S.misses;
+  document.getElementById('sA').textContent = sc > 0
+    ? Math.round(S.misses / sc * 100) + '%' : '—';
+}
+
+function buildLog() {
+  const g = document.getElementById('logGrid'); g.innerHTML = '';
+  for (let i = 0; i < TOT; i++) {
+    const d = document.createElement('div');
+    d.className = 'ldot';
+    if (i < S.log.length) {
+      const e = S.log[i];
+      d.classList.add(e.type); d.textContent = {hit:'✓',miss:'✗',yev:'◆',skip:'–'}[e.type];
+    } else if (i === S.round && S.phase !== 'idle' && S.phase !== 'done') {
+      d.classList.add('cur'); d.textContent = i+1;
+    } else { d.textContent = i+1; }
+    g.appendChild(d);
+  }
+}
+
+// Build log without highlighting the current round dot (used during observe/idle phase)
+function buildLogNoActive() {
+  const g = document.getElementById('logGrid'); g.innerHTML = '';
+  for (let i = 0; i < TOT; i++) {
+    const d = document.createElement('div');
+    d.className = 'ldot';
+    if (i < S.log.length) {
+      const e = S.log[i];
+      d.classList.add(e.type); d.textContent = {hit:'✓',miss:'✗',yev:'◆',skip:'–'}[e.type];
+    } else { d.textContent = i+1; }
+    g.appendChild(d);
+  }
+}
+
+function setRlbl() {
+  document.getElementById('rlbl').textContent = `Round ${Math.min(S.round+1,TOT)} / ${TOT}`;
+}
+
+// ── Timer arc UI only (no callbacks) ──────────────────────
+const CIRC = 2 * Math.PI * 45;
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+let arcIv = null;
+function runArc(dur, col) {
+  const arc = document.getElementById('timerArc');
+  const num = document.getElementById('tNum');
+  arc.style.strokeDasharray = CIRC;
+  arc.style.strokeDashoffset = 0;
+  arc.style.stroke = col || 'var(--accent)';
+  arc.style.filter = `drop-shadow(0 0 5px ${col||'var(--accent)'})`;
+  clearInterval(arcIv);
+  let elapsed = 0;
+  arcIv = setInterval(() => {
+    elapsed += 60;
+    arc.style.strokeDashoffset = CIRC * Math.min(elapsed / dur, 1);
+    num.textContent = Math.max(Math.ceil((dur - elapsed) / 1000), 0);
+    if (elapsed >= dur) clearInterval(arcIv);
+  }, 60);
+}
+
+function stopArc() {
+  clearInterval(arcIv);
+  document.getElementById('tNum').textContent = '–';
+  document.getElementById('timerArc').style.strokeDashoffset = 0;
+}
+
+// ── Async experiment loop — 5 modes, no callbacks, no races ──
+let roundLoopRunning = false;
+
+async function runExperiment() {
+  if (roundLoopRunning) return;
+  roundLoopRunning = true;
+  S.round = 0;
+  const mode = S.experimentMode;
+
+  while (S.round < TOT && S.phase !== 'done') {
+
+    // ════════════════════════════════════════════════════════
+    //  OBSERVE PHASE — always 2s, content depends on mode
+    // ════════════════════════════════════════════════════════
+    S.phase = 'observe';
+    S.userGuess = null;
+    S.pendingAtt = undefined;
+    S.pendingReactionMs = undefined;
+
+    let qrngSampledAt = null;
+    let blindScheduled = false;
+
+    // POST & DELAYED: draw QRNG now (before user sees guess phase)
+    if (mode === 'POST' || mode === 'DELAYED') {
+      qrngSampledAt = Date.now();
+      S.nextColor = await randColor();
+      if (S.phase === 'done') break;
+    }
+
+    // BLIND: schedule QRNG at a random time during observe+guess window (0–10s)
+    if (mode === 'BLIND') {
+      const blindDelay = Math.floor(Math.random() * (T_OBS + T_GUESS));
+      setTimeout(async () => {
+        if (S.phase === 'done') return;
+        qrngSampledAt = Date.now();
+        S.nextColor = await randColor();
+        blindScheduled = true;
+      }, blindDelay);
+    }
+
+    clrSel(); setBtns(false); showConfSlider(false);
+    setRes('—'); setRlbl(); buildLogNoActive();
+    document.getElementById('phaseLbl').textContent =
+      `Round ${S.round+1} of ${TOT} · Observe [${mode}]`;
+    runArc(T_OBS, 'var(--accent)');
+
+    for (let s = Math.ceil(T_OBS/1000); s >= 1; s--) {
+      if (S.phase === 'done') { roundLoopRunning = false; return; }
+      setInstr(`IDLING · ${s}s — prepare your expectation &nbsp;<span style="color:var(--muted);font-size:9px;">MODE: ${mode}</span>`);
+      await sleep(1000);
+    }
+    if (S.phase === 'done') break;
+
+    // ════════════════════════════════════════════════════════
+    //  GUESS PHASE — user clicks RED or GREEN
+    // ════════════════════════════════════════════════════════
+    S.phase = 'guess';
+    S.userGuess = null;
+    S.guessStartTime = Date.now();
+    document.getElementById('phaseLbl').textContent = `Round ${S.round+1} · Lock expectation`;
+    setBtns(true); showConfSlider(true); buildLog();
+    runArc(T_GUESS, '#ffc300');
+
+    const guessDeadline = Date.now() + T_GUESS;
+    let countdown = Math.ceil(T_GUESS / 1000);
+    setInstr(`⚡ SET CONFIDENCE · then click RED or GREEN · ${countdown}s remaining`);
+
+    while (Date.now() < guessDeadline && S.phase === 'guess') {
+      if (S.phase === 'done') { roundLoopRunning = false; return; }
+      const secLeft = Math.ceil((guessDeadline - Date.now()) / 1000);
+      if (secLeft !== countdown) {
+        countdown = secLeft;
+        setInstr(`⚡ SET CONFIDENCE · then click RED or GREEN · ${countdown}s remaining`);
+      }
+      await sleep(100);
+    }
+
+    setBtns(false); showConfSlider(false);
+    if (S.phase === 'done') break;
+
+    const userActed  = (S.phase === 'clicked');
+    const guessMadeAt = userActed ? Date.now() : null;
+    const att        = S.pendingAtt !== undefined ? S.pendingAtt : confValue;
+    const reactionMs = S.pendingReactionMs !== undefined ? S.pendingReactionMs : null;
+    const reactionSec = reactionMs !== null ? (reactionMs/1000).toFixed(1) : '—';
+    delete S.pendingAtt; delete S.pendingReactionMs;
+
+    // PRE: draw QRNG right after click (expectation precedes collapse)
+    if (mode === 'PRE' && userActed) {
+      qrngSampledAt = Date.now();
+      S.nextColor = await randColor();
+      if (S.phase === 'done') break;
+    }
+
+    // SIMULTANEOUS: draw QRNG at exact click tick
+    if (mode === 'SIMULTANEOUS' && userActed) {
+      qrngSampledAt = S.guessStartTime + (reactionMs || 0);
+      S.nextColor = await randColor();
+      if (S.phase === 'done') break;
+    }
+
+    // BLIND: if QRNG hasn't fired yet (user clicked very fast), draw now
+    if (mode === 'BLIND' && !S.nextColor) {
+      qrngSampledAt = Date.now();
+      S.nextColor = await randColor();
+      if (S.phase === 'done') break;
+    }
+
+    // Compute collapseOffset: ms between QRNG draw and click
+    // negative = QRNG before click, 0 = simultaneous, positive = QRNG after click
+    const collapseOffset = (qrngSampledAt && guessMadeAt)
+      ? qrngSampledAt - guessMadeAt : null;
+
+    // Brief pause if user clicked so they see the locked message
+    if (userActed) await sleep(900);
+    if (S.phase === 'done') break;
+
+    // DELAYED: show a holding screen for 5s before reveal
+    if (mode === 'DELAYED' && userActed) {
+      S.phase = 'delay';
+      setBox('blue');
+      runArc(T_DELAY, 'var(--muted)');
+      for (let s = Math.ceil(T_DELAY/1000); s >= 1; s--) {
+        if (S.phase === 'done') { roundLoopRunning = false; return; }
+        setInstr(`DELAYED REVEAL · ${s}s — result held back`);
+        await sleep(1000);
+      }
+      if (S.phase === 'done') break;
+    }
+
+    // ════════════════════════════════════════════════════════
+    //  REVEAL
+    // ════════════════════════════════════════════════════════
+    S.phase = 'reveal';
+    const actual = S.nextColor;
+    if (!actual) { // safety — shouldn't happen
+      setInstr('QRNG error — round replayed'); await sleep(1500); setBox('blue'); continue;
+    }
+    setBox(actual);
+
+    if (!userActed || !S.userGuess) {
+      setRes('⏱ TIME OUT · No input — round not counted', '');
+      setInstr('No input. Round not counted. Restarting…');
+      runArc(1500, 'var(--muted)');
+      await sleep(1500);
+      if (S.phase === 'done') break;
+      setBox('blue'); S.nextColor = null; continue;
+
+    } else if (actual === 'yellow') {
+      S.yellows++;
+      S.attentionValues.push(att);
+      S.log.push({type:'yev', guess:S.userGuess, actual,
+        attentionPct:att, reactionMs, collapseOffset, qrngSampledAt, guessMadeAt});
+      setRes('◆ QUANTUM ANOMALY · Yellow · Unscored', 'yev');
+      setInstr(`Anomaly — unscored. Reaction: ${reactionSec}s`);
+      runArc(T_REV, '#ffc300');
+      await sleep(T_REV);
+      if (S.phase === 'done') break;
+      setBox('blue'); S.nextColor = null; continue;
+
+    } else if (S.userGuess === actual) {
+      S.hits++;
+      S.attentionValues.push(att);
+      S.log.push({type:'hit', guess:S.userGuess, actual,
+        attentionPct:att, reactionMs, collapseOffset, qrngSampledAt, guessMadeAt});
+      setRes(`✓ CONFIRMED · ${S.userGuess.toUpperCase()} · Conf ${att}% · RT ${reactionSec}s`, 'hit');
+      setInstr('Expectation aligned with quantum collapse.');
+      runArc(T_REV, 'var(--accentg)');
+
+    } else {
+      S.misses++;
+      S.attentionValues.push(att);
+      S.log.push({type:'miss', guess:S.userGuess, actual,
+        attentionPct:att, reactionMs, collapseOffset, qrngSampledAt, guessMadeAt});
+      setRes(`✗ VIOLATED · Expected ${S.userGuess.toUpperCase()} · Got ${actual.toUpperCase()} · Conf ${att}% · RT ${reactionSec}s`, 'miss');
+      setInstr('Expectation resisted. Hypothesis point logged.');
+      runArc(T_REV, 'var(--red)');
+    }
+
+    updStats(); buildLog();
+    await sleep(T_REV);
+    if (S.phase === 'done') break;
+
+    S.round++;
+    S.nextColor = null;
+    setBox('blue');
+  }
+
+  roundLoopRunning = false;
+  if (S.phase !== 'done') showFinal();
+}
+
+// guess() just sets state flags — the async loop polls and reacts
+function guess(c) {
+  if (S.phase !== 'guess' || S.userGuess) return;
+  S.userGuess = c;
+  S.pendingAtt = confSource === 'eeg' ? confValue : parseInt(document.getElementById('confSlider').value);
+  S.pendingReactionMs = Date.now() - (S.guessStartTime || Date.now()); // ms since guess phase opened
+  S.phase = 'clicked';
+  document.getElementById(c === 'red' ? 'btnR' : 'btnG').classList.add('sel');
+  const reactionSec = (S.pendingReactionMs / 1000).toFixed(1);
+  setInstr(`Locked at ${S.pendingAtt}% confidence · ${reactionSec}s reaction time. Collapsing…`);
+  stopArc();
+}
+
+// ── Final ─────────────────────────────────────────────────
+async function showFinal() {
+  stopArc(); S.phase = 'done';
+  S.endedAt = new Date().toISOString();
+  const sc = S.hits + S.misses;
+  const hitPct = sc > 0 ? Math.round(S.hits/sc*100) : 0;
+  const antiPct = 100 - hitPct;
+  S.hitPct = hitPct; S.antiPct = antiPct; S.scoredRounds = sc;
+
+  // Compute average attention
+  const attVals = S.attentionValues;
+  const sessionAttentionAvg = attVals.length
+    ? Math.round(attVals.reduce((a,b)=>a+b,0) / attVals.length) : null;
+
+  // Compact round log string
+  const roundLogStr = S.log.map((e,i) =>
+    `R${i+1}:${e.type.toUpperCase()}[G:${e.guess||'—'},A:${e.actual},ATT:${e.attentionPct??'—'},RT:${e.reactionMs!=null?(e.reactionMs/1000).toFixed(1)+'s':'—'},CO:${e.collapseOffset!=null?e.collapseOffset+'ms':'—'}]`
+  ).join(' ');
+
+  // Structured rounds array
+  const rounds = S.log.map((e,i) => ({
+    round:          i+1,
+    guess:          e.guess || null,
+    actual:         e.actual,
+    outcome:        e.type,
+    attentionPct:   e.attentionPct ?? null,
+    reactionMs:     e.reactionMs ?? null,
+    collapseOffset: e.collapseOffset ?? null,  // ms: negative=QRNG before click, 0=simultaneous, positive=after
+    qrngSampledAt:  e.qrngSampledAt ?? null,
+    guessMadeAt:    e.guessMadeAt ?? null,
+  }));
+
+  // Session avg reaction time (ms) — only scored rounds with a click
+  const reactionVals = S.log
+    .filter(e => e.reactionMs != null)
+    .map(e => e.reactionMs);
+  const sessionAvgReactionMs = reactionVals.length
+    ? Math.round(reactionVals.reduce((a,b)=>a+b,0) / reactionVals.length) : null;
+
+  // Device info (brief)
+  const ua = navigator.userAgent;
+  const deviceInfo = ua.length > 120 ? ua.slice(0,120) + '…' : ua;
+
+  const rec = {
+    // ── Identifiers ──
+    testId:              S.testId,
+    participantId:       S.participantId || 'anon',
+    appVersion:          S.appVersion,
+    experimentMode:      S.experimentMode,
+    // ── Timestamps ──
+    startedAt:           S.startedAt,
+    endedAt:             S.endedAt,
+    // ── Outcome ──
+    hits:                S.hits,
+    misses:              S.misses,
+    yellows:             S.yellows,
+    skips:               S.skips,
+    scoredRounds:        sc,
+    hitPct:              hitPct,
+    antiPct:             antiPct,
+    // ── Attention + Reaction ──
+    attentionSource:      confSource,
+    sessionAttentionAvg:  sessionAttentionAvg,
+    sessionAvgReactionMs: sessionAvgReactionMs,
+    // ── Round data (two formats) ──
+    roundLog:            roundLogStr,       // compact string for Sheets/export
+    rounds:              rounds,            // structured array for Firestore queries
+    // ── Source metadata ──
+    qrngSrc:             qSrc,
+    deviceInfo:          deviceInfo,
+  };
+  const saved = await saveToFirebase(rec);
+
+  // Display
+  document.getElementById('finalPanel').style.display = 'block';
+  document.getElementById('fScore').textContent = `${S.hits} / ${sc}`;
+  document.getElementById('fAnti').textContent = `ANTI-CORRELATION INDEX: ${antiPct}%`;
+
+  let verdict = '';
+  if (antiPct >= 70) verdict = `<strong>STRONG ANTI-CORRELATION.</strong><br>Expectations violated ${antiPct}% of the time — well above 50% chance. Hypothesis shows significant preliminary signal.`;
+  else if (antiPct >= 58) verdict = `<strong>MILD ANTI-CORRELATION.</strong><br>Expectations violated ${antiPct}% of the time — above chance. Increase sample size to n≥50 subjects.`;
+  else if (hitPct >= 58) verdict = `<strong>POSITIVE CORRELATION.</strong><br>Expectations confirmed ${hitPct}% — observer may be aligning with collapse, not resisting it.`;
+  else verdict = `<strong>NEAR-CHANCE RESULT.</strong><br>Accuracy ${hitPct}% vs 50% baseline. No significant correlation. Replicate across many participants.`;
+  document.getElementById('fVerdict').innerHTML = verdict;
+
+  const src = qSrc === 'quantum' ? 'ANU QRNG · Vacuum Fluctuation' : 'crypto.getRandomValues()';
+  document.getElementById('fMeta').innerHTML =
+    `TEST ID: <span>${S.testId}</span><br>` +
+    `PARTICIPANT: <span>${S.participantId || 'ANON'}</span> &nbsp; MODE: <span>${S.experimentMode}</span><br>` +
+    `ENTROPY SOURCE: <span>${src}</span><br>` +
+    `SCORED: <span>${sc}</span> &nbsp; ANOMALIES: <span>${S.yellows}</span> &nbsp; SKIPS: <span>${S.skips}</span><br>` +
+    `HITS: <span>${S.hits}</span> &nbsp; MISSES: <span>${S.misses}</span> &nbsp; ACCURACY: <span>${hitPct}%</span><br>` +
+    `ANTI-CORRELATION: <span>${antiPct}%</span> &nbsp; BASELINE: <span>50%</span><br>` +
+    `AVG CONFIDENCE: <span>${sessionAttentionAvg !== null ? sessionAttentionAvg+'%' : '—'}</span> &nbsp; SOURCE: <span>${confSource.toUpperCase()}</span><br>` +
+    `AVG REACTION TIME: <span>${sessionAvgReactionMs !== null ? (sessionAvgReactionMs/1000).toFixed(2)+'s' : '—'}</span> &nbsp; (fast &lt;2s · deliberate &gt;5s)<br>` +
+    `SAVED TO FIREBASE: <span>${saved ? '✓ YES' : '✗ NOT SAVED (check config)'}</span><br>` +
+    `ROUND LOG: <span style="font-size:9px;word-break:break-all;">${roundLogStr}</span>`;
+}
+
+function restart() {
+  document.getElementById('finalPanel').style.display = 'none';
+  S.phase = 'done';        // kills any running loop iteration
+  roundLoopRunning = false; // allows new loop to start
+  stopArc();
+  initS();
+  S.participantId = participantId;
+  setBox('blue'); buildLogNoActive(); updStats();
+  setRes('—'); clrSel(); setBtns(false);
+  showConfSlider(false);
+  setInstr('Starting new session…', true);
+  setTimeout(() => runExperiment(), 900);
+}
+
+// ── Charts ────────────────────────────────────────────────
+let chartAnti = null, chartTime = null;
+const CHART_DEFAULTS = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{ labels:{ color:'#3a5870', font:{ family:"'Azeret Mono',monospace", size:10 } } } },
+};
+
+function buildCharts(sessions) {
+  // Anti-corr histogram (buckets: 0-10, 10-20, ..., 90-100)
+  const buckets = Array(10).fill(0);
+  sessions.forEach(s => {
+    const i = Math.min(Math.floor((s.antiPct || 0) / 10), 9);
+    buckets[i]++;
+  });
+  const labels = ['0–10%','10–20%','20–30%','30–40%','40–50%','50–60%','60–70%','70–80%','80–90%','90–100%'];
+
+  if (chartAnti) chartAnti.destroy();
+  chartAnti = new Chart(document.getElementById('chartAnti'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets:[{ label:'Sessions', data:buckets,
+        backgroundColor:'rgba(0,207,255,0.18)',
+        borderColor:'rgba(0,207,255,0.6)',borderWidth:1,
+        borderRadius:3,
+      }]
+    },
+    options:{ ...CHART_DEFAULTS,
+      scales:{
+        x:{ ticks:{ color:'#3a5870', font:{size:9, family:"'Azeret Mono',monospace"} }, grid:{color:'rgba(20,32,48,0.8)'} },
+        y:{ ticks:{ color:'#3a5870', font:{size:9, family:"'Azeret Mono',monospace"} }, grid:{color:'rgba(20,32,48,0.8)'} }
+      },
+      plugins:{ ...CHART_DEFAULTS.plugins, annotation:{
+        annotations:[{ type:'line', xMin:4.5, xMax:4.5, borderColor:'rgba(255,195,0,0.4)', borderWidth:2, label:{content:'50% chance line', enabled:true} }]
+      }}
+    }
+  });
+
+  // Sessions over time (last 30)
+  const recent = [...sessions].reverse().slice(-30);
+  const timeLbls = recent.map(s => {
+    const d = new Date(s.endedAt || s.startedAt);
+    return `${d.getMonth()+1}/${d.getDate()}`;
+  });
+  const antiVals = recent.map(s => s.antiPct || 0);
+
+  if (chartTime) chartTime.destroy();
+  chartTime = new Chart(document.getElementById('chartTime'), {
+    type: 'line',
+    data: {
+      labels: timeLbls,
+      datasets:[{
+        label:'Anti-Corr %', data:antiVals,
+        borderColor:'rgba(0,255,153,0.7)',
+        backgroundColor:'rgba(0,255,153,0.05)',
+        pointBackgroundColor:'rgba(0,255,153,0.8)',
+        pointRadius:3, tension:0.35, fill:true,
+      },{
+        label:'50% Baseline', data:antiVals.map(()=>50),
+        borderColor:'rgba(255,195,0,0.35)',
+        borderDash:[6,4], pointRadius:0, tension:0,
+      }]
+    },
+    options:{ ...CHART_DEFAULTS,
+      scales:{
+        x:{ ticks:{ color:'#3a5870', font:{size:9, family:"'Azeret Mono',monospace"}, maxTicksLimit:10 }, grid:{color:'rgba(20,32,48,0.8)'} },
+        y:{ min:0, max:100, ticks:{ color:'#3a5870', font:{size:9, family:"'Azeret Mono',monospace"} }, grid:{color:'rgba(20,32,48,0.8)'} }
+      }
+    }
+  });
+}
+
+// ── Archive ───────────────────────────────────────────────
+async function refreshArchive() {
+  document.getElementById('histList').innerHTML = '<div class="h-empty">Loading…</div>';
+  const sessions = await loadFromFirebase(300);
+  document.getElementById('hCnt').textContent = `${sessions.length} session${sessions.length===1?'':'s'} globally`;
+
+  // Agg
+  let tR=0,tH=0,tM=0,tY=0,antiSum=0;
+  sessions.forEach(s=>{tR+=s.scoredRounds||0;tH+=s.hits||0;tM+=s.misses||0;tY+=s.yellows||0;antiSum+=s.antiPct||0;});
+  document.getElementById('aSess').textContent = sessions.length;
+  document.getElementById('aRnd').textContent  = tR;
+  document.getElementById('aHit').textContent  = tH;
+  document.getElementById('aMiss').textContent = tM;
+  document.getElementById('aYel').textContent  = tY;
+  document.getElementById('aAnti').textContent = sessions.length ? Math.round(antiSum/sessions.length)+'%' : '—';
+
+  buildCharts(sessions);
+
+  // List
+  const list = document.getElementById('histList');
+  list.innerHTML = '';
+  if (!sessions.length) { list.innerHTML = '<div class="h-empty">No sessions yet. Be the first!</div>'; return; }
+
+  sessions.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'hitem';
+    const date = new Date(s.endedAt||s.startedAt).toLocaleString();
+    const ac = s.antiPct >= 60 ? 'r' : s.antiPct <= 40 ? 'g' : 'a';
+    const mbars = (s.log||[]).map(e=>`<div class="mb ${e.type}"></div>`).join('');
+    div.innerHTML = `
+      <div class="h-top">
+        <div>
+          <div class="h-id">${s.testId}</div>
+          <div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:2px;">
+            PID: ${s.participantId||'anon'}
+          </div>
+        </div>
+        <div class="h-date">${date}</div>
+      </div>
+      <div class="h-pills">
+        <span class="pill g">${s.hits} HITS</span>
+        <span class="pill r">${s.misses} MISSES</span>
+        <span class="pill y">${s.yellows} ANOM</span>
+        <span class="pill ${ac}">ANTI-CORR ${s.antiPct}%</span>
+        <span class="pill m">${s.experimentMode || 'POST'}</span>
+        <span class="pill m">${s.qrngSrc==='quantum'?'QRNG':'CRYPTO'}</span>
+      </div>
+      <div class="mini-bar">${mbars}</div>
+      <div class="h-src">SOURCE: ${s.qrngSrc==='quantum'?'ANU VACUUM QRNG':'crypto.getRandomValues()'} · ${s.scoredRounds} SCORED ROUNDS</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// ── Tab nav ───────────────────────────────────────────────
+function goTab(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+name).classList.add('on');
+  const idx = name==='exp'?0:1;
+  document.querySelectorAll('.tab')[idx].classList.add('on');
+  if (name==='archive') refreshArchive();
+}
+
+// ── Boot ──────────────────────────────────────────────────
+window.onload = async () => {
+  const ld = document.getElementById('loadOverlay');
+  const ldTxt = document.getElementById('ldTxt');
+
+  ldTxt.textContent = 'Initializing Firebase…';
+  initFirebase();
+  await new Promise(r=>setTimeout(r,400));
+
+  ldTxt.textContent = 'Fetching quantum entropy (ANU QRNG)…';
+  fetchQRNG(); // non-blocking
+  await new Promise(r=>setTimeout(r,600));
+
+  ldTxt.textContent = 'Assigning participant ID…';
+  // Use saved ID or auto-generate a new one — no button press ever needed
+  const savedPid = localStorage.getItem('qex_pid') || genIdStr();
+  localStorage.setItem('qex_pid', savedPid);
+  participantId = savedPid;
+  // Show active ID area immediately, hide setup form
+  document.getElementById('idSetupArea').style.display = 'none';
+  document.getElementById('idActiveArea').style.display = 'block';
+  document.getElementById('activeIdDisplay').textContent = savedPid;
+  await new Promise(r=>setTimeout(r,400));
+
+  ldTxt.textContent = 'Ready.';
+  await new Promise(r=>setTimeout(r,350));
+  ld.style.opacity = '0';
+  ld.style.transition = 'opacity 0.5s';
+  setTimeout(()=>ld.style.display='none', 500);
+
+  initS();
+  S.participantId = savedPid;
+  setBox('blue');
+  buildLogNoActive();
+  updStats();
+  setInstr('Starting experiment…', true);
+  setTimeout(() => runExperiment(), 900);
+};
+</script>
+</body>
+</html>
