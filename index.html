@@ -5,6 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intersection Insights | PhyAI, Quantum & Vedic Tech</title>
 
+    <!-- ═══ GOOGLE ANALYTICS 4 ═══
+         Replace G-XXXXXXXXXX with your real Measurement ID from:
+         analytics.google.com → Admin → Data Streams → Web
+    ════════════════════════════ -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-8Y8EYHB278', { anonymize_ip: true });
+
+      // Track every card/link click with destination + label
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('a[href]').forEach(function (link) {
+          link.addEventListener('click', function () {
+            var dest     = link.getAttribute('href') || 'unknown';
+            var label    = link.querySelector('h3')
+                            ? link.querySelector('h3').innerText.trim().slice(0, 80)
+                            : (link.innerText.trim().slice(0, 80) || dest);
+            var external = dest.startsWith('http') && !dest.includes(window.location.hostname);
+            gtag('event', 'link_click', {
+              event_category : external ? 'outbound' : 'card_click',
+              event_label     : label,
+              link_destination: dest,
+              page_path       : window.location.pathname
+            });
+          });
+        });
+      });
+    </script>
+
     <!-- Tailwind CSS — production-safe pre-built stylesheet, no CDN JS warning -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
 
@@ -409,6 +440,13 @@
             <div class="mt-4 flex justify-center space-x-4">
                 <a href="https://www.linkedin.com/in/rahuldeo2047/" class="text-gray-400 hover:text-accentteal transition-colors"><i class="fa-brands fa-linkedin text-xl"></i></a>
                 <a href="https://github.com/rahuldeo2047/" class="text-gray-400 hover:text-gray-900 transition-colors"><i class="fa-brands fa-github text-xl"></i></a>
+            </div>
+            <div class="mt-4">
+                <a href="stats.html"
+                   class="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-accentteal transition-colors border border-gray-200 hover:border-accentteal rounded-full px-3 py-1">
+                    <i class="fa-solid fa-chart-line text-xs"></i>
+                    Public Site Stats
+                </a>
             </div>
         </div>
     </footer>
