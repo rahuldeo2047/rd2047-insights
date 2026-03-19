@@ -1100,7 +1100,7 @@ function initS() {
   S = {
     testId:         genTestId(),
     participantId:  participantId,
-    experimentMode: currentMode,
+    experimentMode: null,
     round:0, hits:0, misses:0, yellows:0, skips:0,
     curColor:'blue', nextColor:null, userGuess:null,
     phase:'idle',
@@ -1109,8 +1109,10 @@ function initS() {
     attentionSource: 'slider',
     appVersion: '3.2',
   };
+  S.experimentMode = currentMode;
+  const mode = currentMode;
   document.getElementById('testIdLine').textContent =
-    'TEST: ' + S.testId + '  ·  MODE: ' + currentMode;
+    'TEST: ' + S.testId + '  ·  MODE: ' + mode;
 }
 
 // ── UI helpers ────────────────────────────────────────────
@@ -1221,6 +1223,7 @@ async function runExperiment() {
   if (roundLoopRunning) return;
   roundLoopRunning = true;
   S.round = 0;
+  S.experimentMode = currentMode;
   const mode = S.experimentMode;
 
   while (S.round < TOT && S.phase !== 'done') {
