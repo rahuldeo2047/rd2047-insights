@@ -4,38 +4,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intersection Insights | PhyAI, Quantum & Vedic Tech</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
+
+    <!-- Tailwind CSS — production-safe pre-built stylesheet, no CDN JS warning -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,300;0,700;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        serif: ['Merriweather', 'serif'],
-                    },
-                    colors: {
-                        warmbg: '#faf8f5',
-                        textmain: '#2d3748',
-                        accentteal: '#0d9488',
-                        accentamber: '#d97706',
-                    }
-                }
-            }
+    <style>
+        /* ── Design-token overrides (replaces tailwind.config custom values) ── */
+        :root {
+            --color-warmbg:      #faf8f5;
+            --color-textmain:    #2d3748;
+            --color-accentteal:  #0d9488;
+            --color-accentamber: #d97706;
         }
-    </script>
+
+        /* Base resets that the CDN script version applied via config */
+        body {
+            background-color: var(--color-warmbg);
+            color: var(--color-textmain);
+            font-family: 'Inter', sans-serif;
+        }
+        .font-serif  { font-family: 'Merriweather', serif; }
+        .font-mono   { font-family: 'JetBrains Mono', monospace; }
+
+        /* Custom colour utilities referenced in markup */
+        .bg-warmbg       { background-color: var(--color-warmbg); }
+        .text-textmain   { color: var(--color-textmain); }
+        .bg-accentteal   { background-color: var(--color-accentteal); }
+        .text-accentteal { color: var(--color-accentteal); }
+        .border-accentteal { border-color: var(--color-accentteal); }
+        .hover\:border-accentteal:hover { border-color: var(--color-accentteal); }
+        .hover\:text-accentteal:hover   { color: var(--color-accentteal); }
+        .text-accentamber { color: var(--color-accentamber); }
+
+        /* ── Component animations ── */
+        /* NV card: animated top-to-bottom scan line */
+        @keyframes scan {
+            0%   { top: -2px;  opacity: 0; }
+            8%   { opacity: 1; }
+            92%  { opacity: 1; }
+            100% { top: calc(100% + 2px); opacity: 0; }
+        }
+        .nv-scan::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,229,255,0.75), transparent);
+            animation: scan 3.4s linear infinite;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* NV card: slow electron orbit rotation */
+        @keyframes spin-slow  { to { transform: rotate( 360deg); } }
+        @keyframes spin-rev   { to { transform: rotate(-360deg); } }
+        .orbit-a { animation: spin-slow 7s linear infinite;  transform-origin: 48px 48px; }
+        .orbit-b { animation: spin-rev  10s linear infinite; transform-origin: 48px 48px; }
+
+        /* live pulse dot */
+        @keyframes pdot { 0%,100%{opacity:1} 50%{opacity:.2} }
+        .pdot { animation: pdot 2s infinite; }
+
+        /* Safe card: horizontal ruled paper lines */
+        .paper-lines {
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent, transparent 27px,
+                rgba(180,160,130,0.2) 27px, rgba(180,160,130,0.2) 28px
+            );
+        }
+
+        /* red strikethrough for eliminated hazards */
+        .hazard-strike {
+            text-decoration: line-through;
+            text-decoration-color: #dc2626;
+            color: #dc2626;
+            opacity: 0.9;
+        }
+    </style>
 </head>
 <body class="bg-warmbg text-textmain font-sans antialiased leading-relaxed min-h-screen flex flex-col">
 
-    <!-- Header / Hero Section -->
+    <!-- ════════════ HEADER ════════════ -->
     <header class="bg-white border-b border-gray-200 shadow-sm pt-16 pb-12">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 class="text-4xl md:text-5xl font-serif font-bold text-gray-900 mb-6 leading-tight">
@@ -45,8 +100,6 @@
             <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto font-light mb-8">
                 A digital garden documenting research, architectural teardowns, and visionary frameworks connecting ancient Indian paradigms with next-generation edge robotics and quantum computing.
             </p>
-            
-            <!-- Domain Tags -->
             <div class="flex flex-wrap justify-center gap-3 text-sm">
                 <span class="bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-100"><i class="fa-solid fa-robot mr-1"></i> PhyAI & Robotics</span>
                 <span class="bg-amber-50 text-amber-700 px-3 py-1 rounded-full border border-amber-100"><i class="fa-solid fa-atom mr-1"></i> Quantum Computing</span>
@@ -56,24 +109,22 @@
         </div>
     </header>
 
-    <!-- Main Content: Article Feed -->
+    <!-- ════════════ MAIN ════════════ -->
     <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-        
+
         <div class="flex items-center justify-between mb-8">
             <h2 class="text-2xl font-bold text-gray-800">Latest Insights & Deep Dives</h2>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
-            <!-- LIVE ARTICLE 1: Sarvam AI -->
-            <a href="sarvam-ai-edge-computing.html" class="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:border-accentteal transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:-translate-y-1">
+
+            <!-- ── EXISTING: Sarvam AI ── -->
+            <a href="sarvam-ai-edge-computing.html"
+               class="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:border-accentteal transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:-translate-y-1">
                 <div class="h-48 bg-gray-900 relative overflow-hidden flex items-center justify-center">
-                    <!-- Abstract geometric background -->
                     <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-teal-400 via-gray-900 to-gray-900"></div>
                     <i class="fa-solid fa-microchip text-5xl text-white opacity-80 z-10 group-hover:scale-110 transition-transform duration-300"></i>
-                    <div class="absolute top-4 left-4 bg-accentteal text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider z-10">
-                        Live
-                    </div>
+                    <div class="absolute top-4 left-4 bg-accentteal text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider z-10">Live</div>
                 </div>
                 <div class="p-6 flex flex-col flex-grow">
                     <div class="flex gap-2 mb-3">
@@ -92,64 +143,206 @@
                 </div>
             </a>
 
-            <!-- DRAFT / COMING SOON 1 -->
-            <div class="bg-gray-50 rounded-2xl border border-gray-200 border-dashed overflow-hidden flex flex-col h-full relative">
-                <div class="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                    <span class="bg-gray-900 text-white font-bold px-4 py-2 rounded-lg">Draft in Progress</span>
-                </div>
-                <div class="h-48 bg-gray-200 relative overflow-hidden flex items-center justify-center filter grayscale">
-                    <i class="fa-solid fa-atom text-5xl text-gray-400"></i>
-                    <div class="absolute top-4 left-4 bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
-                        Coming Soon
+            <!-- ══════════════════════════════════════
+                 NEW: NV-CENTER QUANTUM COMPUTER CARD
+            ══════════════════════════════════════ -->
+            <a href="nv-quantum-requirements.html"
+               class="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:border-cyan-400 transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:-translate-y-1">
+
+                <!-- ── Visual header: dark lab / tech ── -->
+                <div class="h-48 relative overflow-hidden nv-scan" style="background:#080c14;">
+
+                    <!-- grid lines -->
+                    <div class="absolute inset-0"
+                         style="background-image:linear-gradient(rgba(0,229,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.04) 1px,transparent 1px);background-size:26px 26px;">
+                    </div>
+
+                    <!-- centre radial glow -->
+                    <div class="absolute inset-0"
+                         style="background:radial-gradient(circle at 50% 58%, rgba(0,229,255,0.08) 0%, transparent 62%);">
+                    </div>
+
+                    <!-- atom SVG, centred -->
+                    <svg width="96" height="96"
+                         viewBox="0 0 96 96" fill="none"
+                         xmlns="http://www.w3.org/2000/svg"
+                         class="absolute"
+                         style="top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;">
+                        <!-- rotating orbits -->
+                        <g class="orbit-a">
+                            <ellipse cx="48" cy="48" rx="42" ry="15"
+                                     stroke="rgba(0,229,255,0.32)" stroke-width="1"/>
+                        </g>
+                        <g class="orbit-b">
+                            <ellipse cx="48" cy="48" rx="42" ry="15"
+                                     stroke="rgba(123,95,245,0.28)" stroke-width="1"
+                                     transform="rotate(60 48 48)"/>
+                            <ellipse cx="48" cy="48" rx="42" ry="15"
+                                     stroke="rgba(0,229,255,0.18)" stroke-width="1"
+                                     transform="rotate(120 48 48)"/>
+                        </g>
+                        <!-- nucleus -->
+                        <circle cx="48" cy="48" r="8"
+                                fill="rgba(0,229,255,0.1)" stroke="#00e5ff" stroke-width="1.5"/>
+                        <circle cx="48" cy="48" r="3.5" fill="#00e5ff"/>
+                        <!-- electrons -->
+                        <circle cx="90" cy="48" r="3" fill="#7b5ff5" opacity="0.9"/>
+                        <circle cx="25" cy="22" r="3" fill="#00ff9d" opacity="0.85"/>
+                        <circle cx="25" cy="74" r="2.5" fill="#00e5ff" opacity="0.7"/>
+                    </svg>
+
+                    <!-- floating code snippet, bottom-right -->
+                    <div class="absolute bottom-3 right-3 z-10 rounded-lg px-3 py-2 leading-relaxed font-mono text-xs"
+                         style="background:rgba(6,10,16,0.92);border:1px solid rgba(0,229,255,0.15);color:#3a5a7a;">
+                        <span style="color:#00e5ff;">f_NV</span> = <span style="color:#00ff9d;">2870 MHz</span><br>
+                        <span style="color:#00e5ff;">λ</span>&nbsp;&nbsp;&nbsp;= <span style="color:#00ff9d;">532 nm</span><br>
+                        <span style="color:#00e5ff;">T2</span>&nbsp; ~ <span style="color:#00ff9d;">100 µs</span>
+                    </div>
+
+                    <!-- top-left pulse pill -->
+                    <div class="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2 py-1 rounded font-mono text-xs"
+                         style="background:rgba(6,10,16,0.88);border:1px solid rgba(0,229,255,0.2);color:#00e5ff;">
+                        <span class="pdot w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block"></span>
+                        NV-Center · 2025
+                    </div>
+
+                    <!-- Live badge, top-right -->
+                    <div class="absolute top-3 right-3 z-10 bg-accentteal text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
+                        Live
                     </div>
                 </div>
-                <div class="p-6 flex flex-col flex-grow opacity-60">
-                    <div class="flex gap-2 mb-3">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Quantum / Vedic</span>
+
+                <!-- ── Card body ── -->
+                <div class="p-6 flex flex-col flex-grow">
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="text-xs font-bold text-accentamber uppercase tracking-wider">Quantum</span>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">• DIY Hardware</span>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">• Diamond</span>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-700 mb-3">
-                        Conceptualizing an Indigenous Quantum Framework
+
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-cyan-600 transition-colors duration-200">
+                        NV-Center Diamond Quantum Computer — 2025 Build Guide
                     </h3>
-                    <p class="text-gray-500 text-sm flex-grow">
-                        Exploring how the foundational principles of Advaita and Nada Brahma mirror quantum superposition and entanglement.
-                    </p>
-                </div>
-            </div>
 
-            <!-- DRAFT / COMING SOON 2 -->
-            <div class="bg-gray-50 rounded-2xl border border-gray-200 border-dashed overflow-hidden flex flex-col h-full relative">
-                <div class="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                    <span class="bg-gray-900 text-white font-bold px-4 py-2 rounded-lg">Researching</span>
-                </div>
-                <div class="h-48 bg-gray-200 relative overflow-hidden flex items-center justify-center filter grayscale">
-                    <i class="fa-solid fa-network-wired text-5xl text-gray-400"></i>
-                    <div class="absolute top-4 left-4 bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
-                        Coming Soon
+                    <p class="text-gray-600 text-sm mb-4 flex-grow">
+                        Complete requirements, 2025-updated component alternatives, and a 6-phase build roadmap for a room-temperature nitrogen-vacancy center quantum computer. Optical, microwave, and control subsystems fully costed.
+                    </p>
+
+                    <!-- hazard warning chips -->
+                    <div class="flex flex-wrap gap-1.5 mb-4">
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                              style="background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.22);color:#dc2626;">⚠ Class 3B Laser</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                              style="background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.22);color:#dc2626;">⚠ 3 GHz RF</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                              style="background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.22);color:#dc2626;">⚠ 400V APD</span>
+                    </div>
+
+                    <div class="text-cyan-600 font-semibold text-sm flex items-center">
+                        Open Build Guide
+                        <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
                     </div>
                 </div>
-                <div class="p-6 flex flex-col flex-grow opacity-60">
-                    <div class="flex gap-2 mb-3">
-                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">DIY Hardware / PhyAI</span>
+            </a>
+
+            <!-- ══════════════════════════════════════
+                 NEW: HAZARD-FREE NMR QC CARD
+            ══════════════════════════════════════ -->
+            <a href="safe-qc-system.html"
+               class="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:border-emerald-400 transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:-translate-y-1">
+
+                <!-- ── Visual header: warm editorial / paper ── -->
+                <div class="h-48 relative overflow-hidden paper-lines flex items-center justify-center"
+                     style="background:#f0ebe0;">
+
+                    <!-- safety check badges, top-right -->
+                    <div class="absolute top-3 right-3 z-10 flex flex-col gap-1 items-end">
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-md"
+                              style="background:rgba(255,255,255,0.88);border:1px solid rgba(74,124,95,0.3);color:#166534;">
+                            ✓ <span class="hazard-strike">Laser</span> eliminated
+                        </span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-md"
+                              style="background:rgba(255,255,255,0.88);border:1px solid rgba(74,124,95,0.3);color:#166534;">
+                            ✓ <span class="hazard-strike">HV APD</span> eliminated
+                        </span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-md"
+                              style="background:rgba(255,255,255,0.88);border:1px solid rgba(74,124,95,0.3);color:#166534;">
+                            ✓ <span class="hazard-strike">Microwave</span> eliminated
+                        </span>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-700 mb-3">
-                        Building a Zero-Latency Offline Edge Loop
+
+                    <!-- editorial masthead, centred -->
+                    <div class="relative z-10 text-center px-6">
+                        <p class="font-serif text-xs tracking-widest uppercase text-stone-400 mb-1.5">
+                            The Quantum Maker's Journal
+                        </p>
+                        <div class="w-14 h-px bg-stone-300 mx-auto mb-2"></div>
+                        <p class="font-serif text-2xl italic leading-snug text-stone-800">
+                            Hazard-<span class="not-italic font-bold text-orange-700">Free</span><br>Architecture
+                        </p>
+                        <div class="w-14 h-px bg-stone-300 mx-auto mt-2 mb-1.5"></div>
+                        <p class="font-serif text-xs text-stone-400 tracking-wide">
+                            NMR · 5V USB · Room Temperature
+                        </p>
+                    </div>
+
+                    <!-- tier pills, bottom-left -->
+                    <div class="absolute bottom-3 left-3 z-10 flex gap-1.5 flex-wrap">
+                        <span class="font-serif italic text-xs px-2 py-0.5 rounded"
+                              style="background:rgba(255,255,255,0.82);border:1px solid #d9d0c2;color:#5c3d1e;">Tier I ~$100</span>
+                        <span class="font-serif italic text-xs px-2 py-0.5 rounded"
+                              style="background:rgba(255,255,255,0.82);border:1px solid #d9d0c2;color:#5c3d1e;">Tier II ~$500</span>
+                        <span class="font-serif italic text-xs px-2 py-0.5 rounded"
+                              style="background:rgba(255,255,255,0.82);border:1px solid #d9d0c2;color:#5c3d1e;">III $15k+</span>
+                    </div>
+
+                    <!-- Live badge, top-left -->
+                    <div class="absolute top-3 left-3 z-10 bg-accentteal text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
+                        Live
+                    </div>
+                </div>
+
+                <!-- ── Card body ── -->
+                <div class="p-6 flex flex-col flex-grow">
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Quantum</span>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">• NMR · Safe Build</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-200">
+                        Hazard-Free DIY Quantum Computer — NMR Architecture
                     </h3>
-                    <p class="text-gray-500 text-sm flex-grow">
-                        A practical guide to connecting offline localized LLMs directly to Arduino sensors for true physical artificial intelligence.
+
+                    <p class="text-gray-600 text-sm mb-4 flex-grow">
+                        All four critical NV-Center hazards eliminated by switching to Nuclear Magnetic Resonance physics — copper coils, permanent magnets, milliwatt RF. Three build tiers from $100. No laser, no high voltage, no permits required.
                     </p>
+
+                    <!-- safety green chips -->
+                    <div class="flex flex-wrap gap-1.5 mb-4">
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                              style="background:#f0fdf4;border:1px solid #a7f3d0;color:#166534;">✓ No laser</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                              style="background:#f0fdf4;border:1px solid #a7f3d0;color:#166534;">✓ 5V max</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                              style="background:#f0fdf4;border:1px solid #a7f3d0;color:#166534;">✓ No permits</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                              style="background:#f0fdf4;border:1px solid #a7f3d0;color:#166534;">✓ Consumer-safe RF</span>
+                    </div>
+
+                    <div class="text-emerald-700 font-semibold text-sm flex items-center">
+                        Open Safe Architecture
+                        <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
                 </div>
-            </div>
+            </a>
 
-        </div>
-
-                    <!-- LIVE EXPERIMENT: Consciousness & Quantum Collapse -->
-            <a href="consciousness-and-quantum-collapse-correlation-testing.html" class="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:border-accentteal transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:-translate-y-1">
+            <!-- ── EXISTING: Consciousness & Quantum ── -->
+            <a href="consciousness-and-quantum-collapse-correlation-testing.html"
+               class="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:border-accentteal transition-all duration-300 flex flex-col h-full cursor-pointer transform hover:-translate-y-1">
                 <div class="h-48 bg-indigo-950 relative overflow-hidden flex items-center justify-center">
                     <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-400 via-indigo-950 to-indigo-950"></div>
                     <i class="fa-solid fa-eye text-5xl text-white opacity-80 z-10 group-hover:scale-110 transition-transform duration-300"></i>
-                    <div class="absolute top-4 left-4 bg-accentteal text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider z-10">
-                        Live Experiment
-                    </div>
+                    <div class="absolute top-4 left-4 bg-accentteal text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider z-10">Live Experiment</div>
                 </div>
                 <div class="p-6 flex flex-col flex-grow">
                     <div class="flex gap-2 mb-3">
@@ -168,16 +361,54 @@
                     </div>
                 </div>
             </a>
-        
+
+            <!-- ── DRAFT: Indigenous Quantum Framework ── -->
+            <div class="bg-gray-50 rounded-2xl border border-gray-200 border-dashed overflow-hidden flex flex-col h-full relative">
+                <div class="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
+                    <span class="bg-gray-900 text-white font-bold px-4 py-2 rounded-lg">Draft in Progress</span>
+                </div>
+                <div class="h-48 bg-gray-200 relative overflow-hidden flex items-center justify-center filter grayscale">
+                    <i class="fa-solid fa-atom text-5xl text-gray-400"></i>
+                    <div class="absolute top-4 left-4 bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Coming Soon</div>
+                </div>
+                <div class="p-6 flex flex-col flex-grow opacity-60">
+                    <div class="flex gap-2 mb-3">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Quantum / Vedic</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-700 mb-3">Conceptualizing an Indigenous Quantum Framework</h3>
+                    <p class="text-gray-500 text-sm flex-grow">Exploring how the foundational principles of Advaita and Nada Brahma mirror quantum superposition and entanglement.</p>
+                </div>
+            </div>
+
+            <!-- ── DRAFT: Zero-Latency Offline Edge Loop ── -->
+            <div class="bg-gray-50 rounded-2xl border border-gray-200 border-dashed overflow-hidden flex flex-col h-full relative">
+                <div class="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
+                    <span class="bg-gray-900 text-white font-bold px-4 py-2 rounded-lg">Researching</span>
+                </div>
+                <div class="h-48 bg-gray-200 relative overflow-hidden flex items-center justify-center filter grayscale">
+                    <i class="fa-solid fa-network-wired text-5xl text-gray-400"></i>
+                    <div class="absolute top-4 left-4 bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Coming Soon</div>
+                </div>
+                <div class="p-6 flex flex-col flex-grow opacity-60">
+                    <div class="flex gap-2 mb-3">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">DIY Hardware / PhyAI</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-700 mb-3">Building a Zero-Latency Offline Edge Loop</h3>
+                    <p class="text-gray-500 text-sm flex-grow">A practical guide to connecting offline localized LLMs directly to Arduino sensors for true physical artificial intelligence.</p>
+                </div>
+            </div>
+
+        </div><!-- /grid -->
+
     </main>
 
-    <!-- Footer -->
+    <!-- ════════════ FOOTER ════════════ -->
     <footer class="bg-white border-t border-gray-200 py-8 mt-auto">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
             <p>Curated insights bridging ancient wisdom and frontier technology.</p>
             <div class="mt-4 flex justify-center space-x-4">
-                <a href="#" class="text-gray-400 hover:text-accentteal transition-colors"><i class="fa-brands fa-linkedin text-xl"></i></a>
-                <a href="#" class="text-gray-400 hover:text-gray-900 transition-colors"><i class="fa-brands fa-github text-xl"></i></a>
+                <a href="https://www.linkedin.com/in/rahuldeo2047/" class="text-gray-400 hover:text-accentteal transition-colors"><i class="fa-brands fa-linkedin text-xl"></i></a>
+                <a href="https://github.com/rahuldeo2047/" class="text-gray-400 hover:text-gray-900 transition-colors"><i class="fa-brands fa-github text-xl"></i></a>
             </div>
         </div>
     </footer>
