@@ -3,6 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google tag (gtag.js) — GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+
+  // ── Core config ──
+  gtag('config', 'G-8Y8EYHB278', {
+    // Send page_view automatically on load
+    send_page_view: true,
+    // Anonymise IP (GDPR-friendly)
+    anonymize_ip: true
+  });
+
+  // ── Track all <a> link clicks as events ──
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('a[href]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        var destination = link.getAttribute('href') || 'unknown';
+        var label       = link.innerText.trim().slice(0, 80) || destination;
+        var isExternal  = destination.startsWith('http') &&
+                          !destination.includes(window.location.hostname);
+
+        gtag('event', 'link_click', {
+          event_category : isExternal ? 'outbound' : 'internal',
+          event_label     : label,
+          link_destination: destination,
+          page_path       : window.location.pathname
+        });
+      });
+    });
+  });
+</script>
+   
 <title>Observer Collapse Laboratory</title>
 <link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app-compat.js"></script>
