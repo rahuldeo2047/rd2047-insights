@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Site Stats — Quantum Build Series</title>
+
+  <!-- ═══ GOOGLE ANALYTICS 4 ═══  Replace G-XXXXXXXXXX ═══ -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-8Y8EYHB278', { anonymize_ip: true });
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <style>
+    /* ─── RESET ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    /* ─── BASE ─── */
+    :root {
+      --bg:       #080c14;
+      --surface:  #0d1421;
+      --surface2: #121a2b;
+      --border:   #1e2d47;
+      --accent:   #00e5ff;
+      --accent2:  #7b5ff5;
+      --accent3:  #00ff9d;
+      --amber:    #f59e0b;
+      --danger:   #ff4757;
+      --text:     #e8edf5;
+      --muted:    #667399;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── GRID BG ─── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+      background-size: 44px 44px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+
+    /* ─── HEADER ─── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+    .topbar-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none;
+    }
+    .topbar-logo:hover { opacity: 0.8; }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent3);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+    .topbar-right { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+    /* ─── HERO ─── */
+    .hero { text-align: center; padding: 56px 0 44px; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 999px; padding: 5px 16px;
+      font-size: 11px; font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 20px;
+    }
+    .hero-eyebrow span { color: var(--accent3); }
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 1.1; letter-spacing: -0.02em;
+      color: #fff; margin-bottom: 12px;
+    }
+    h1 em { font-style: italic; color: var(--accent); }
+    .hero-sub { font-size: 15px; color: var(--muted); max-width: 500px; margin: 0 auto 32px; line-height: 1.6; }
+
+    /* ─── GA NOTICE BANNER ─── */
+    .ga-notice {
+      background: linear-gradient(135deg, rgba(123,95,245,0.1), rgba(0,229,255,0.06));
+      border: 1px solid rgba(123,95,245,0.3);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 40px;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .ga-notice-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .ga-notice-title { font-weight: 700; font-size: 14px; color: var(--accent2); margin-bottom: 4px; }
+    .ga-notice-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .ga-notice-body a { color: var(--accent); text-decoration: none; }
+    .ga-notice-body a:hover { text-decoration: underline; }
+    .ga-notice-body code {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent3);
+    }
+
+    /* ─── SECTION LABEL ─── */
+    .section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 20px;
+    }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--accent);
+      letter-spacing: 0.15em; text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .section-rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+    h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(20px, 2.5vw, 28px);
+      color: #fff; margin-bottom: 6px;
+    }
+    .section-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    /* ─── PAGE ROWS ─── */
+    .pages-table { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
+
+    .page-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 22px;
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      align-items: center;
+      gap: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .page-row:hover {
+      border-color: rgba(0,229,255,0.3);
+      box-shadow: 0 0 24px rgba(0,229,255,0.06);
+    }
+
+    /* rank number */
+    .rank {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--muted);
+    }
+    .rank.top { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.06); }
+
+    /* page info */
+    .page-info {}
+    .page-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+    .page-name { font-weight: 700; font-size: 15px; color: #fff; }
+    .page-url { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+    .page-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tag {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .tag-live    { background: rgba(0,229,255,0.08);  border: 1px solid rgba(0,229,255,0.2);  color: var(--accent); }
+    .tag-quantum { background: rgba(123,95,245,0.08); border: 1px solid rgba(123,95,245,0.2); color: var(--accent2); }
+    .tag-safe    { background: rgba(0,255,157,0.06);  border: 1px solid rgba(0,255,157,0.2);  color: var(--accent3); }
+    .tag-phyai   { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); color: var(--amber); }
+    .tag-vedic   { background: rgba(255,71,87,0.07);  border: 1px solid rgba(255,71,87,0.2);  color: var(--danger); }
+    .tag-exp     { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); color: #a5b4fc; }
+
+    /* metrics */
+    .page-metrics {
+      display: flex; gap: 20px; align-items: center; flex-shrink: 0;
+    }
+    .metric { text-align: right; }
+    .metric-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px; color: var(--accent);
+      line-height: 1; display: block;
+    }
+    .metric-val.green  { color: var(--accent3); }
+    .metric-val.purple { color: var(--accent2); }
+    .metric-label {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--muted);
+    }
+
+    /* bar overlay */
+    .page-row { position: relative; overflow: hidden; }
+    .view-bar {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      background: linear-gradient(90deg, rgba(0,229,255,0.04), transparent);
+      pointer-events: none;
+      transition: width 1s cubic-bezier(.22,1,.36,1);
+    }
+
+    /* ─── SUMMARY TILES ─── */
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+    }
+    .tile-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 8px; }
+    .tile-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 36px; line-height: 1;
+      color: var(--accent); margin-bottom: 4px;
+    }
+    .tile-val.green  { color: var(--accent3); }
+    .tile-val.purple { color: var(--accent2); }
+    .tile-sub { font-size: 12px; color: var(--muted); }
+
+    /* ─── EMBED INSTRUCTIONS ─── */
+    .embed-block {
+      background: #060a10;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 26px;
+      margin-bottom: 48px;
+    }
+    .embed-title { font-weight: 700; font-size: 15px; color: #fff; margin-bottom: 4px; }
+    .embed-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+    .embed-steps { display: flex; flex-direction: column; gap: 10px; }
+    .embed-step {
+      display: flex; gap: 12px; align-items: flex-start;
+      font-size: 13px; color: var(--muted); line-height: 1.6;
+    }
+    .step-num {
+      width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent);
+    }
+    .embed-step code {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--accent3);
+    }
+
+    /* ─── GA EMBED IFRAME SECTION ─── */
+    .ga-embed {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 48px;
+    }
+    .ga-embed-title { font-weight: 700; font-size: 15px; color: #fff; margin-bottom: 4px; }
+    .ga-embed-sub   { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+    .ga-embed-frame {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px;
+      background: #0a0e18;
+    }
+    .ga-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0,229,255,0.06);
+      border: 1px solid rgba(0,229,255,0.2);
+      color: var(--accent); border-radius: 8px;
+      padding: 10px 18px; font-size: 13px; font-weight: 600;
+      text-decoration: none; transition: all 0.2s;
+      margin-top: 12px;
+    }
+    .ga-cta:hover { background: rgba(0,229,255,0.12); border-color: rgba(0,229,255,0.4); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 640px) {
+      .page-row { grid-template-columns: 28px 1fr; }
+      .page-metrics { display: none; }
+      .tiles { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 0;
+      text-align: center;
+      font-size: 12px; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <a href="index.html" class="topbar-logo">
+      <span class="live-dot"></span>
+      ← Quantum Build Series
+    </a>
+    <div class="topbar-right" id="last-updated">Powered by Google Analytics 4</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow"><span>Public</span> · Site Analytics Dashboard</div>
+    <h1>Page <em>Stats</em> & Interactions</h1>
+    <p class="hero-sub">Live view counts and interaction data for every page in this project — updated continuously via Google Analytics 4.</p>
+  </div>
+
+  <!-- GA SETUP NOTICE -->
+  <div class="ga-notice">
+    <div class="ga-notice-icon">🔧</div>
+    <div>
+      <div class="ga-notice-title">One-time setup required — replace <code>G-8Y8EYHB278</code></div>
+      <div class="ga-notice-body">
+        The numbers shown below are <strong style="color:#e8edf5;">illustrative placeholders</strong> until your real GA4 Measurement ID is added.
+        To activate live data: <strong style="color:#e8edf5;">1)</strong> go to
+        <a href="https://analytics.google.com" target="_blank">analytics.google.com</a> →
+        Admin → Create Property → Data Streams → Web →
+        copy your <code>G-8Y8EYHB278</code> ID.
+        <strong style="color:#e8edf5;">2)</strong> Replace every <code>G-8Y8EYHB278</code> in
+        <code>index.html</code>, <code>nv-quantum-requirements.html</code>,
+        <code>safe-qc-system.html</code>, and this file. That's it — data flows within 24 hours.
+        To make the live counts below real, connect the
+        <a href="https://developers.google.com/analytics/devguides/reporting/data/v1" target="_blank">GA4 Data API</a>
+        or embed a <strong style="color:#e8edf5;">Looker Studio</strong> report (instructions below).
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY TILES -->
+  <div class="section-header">
+    <span class="section-label">01 // overview</span>
+    <div class="section-rule"></div>
+  </div>
+  <h2>Site-Wide Summary</h2>
+  <p class="section-sub">Aggregate totals across all tracked pages</p>
+
+  <div class="tiles">
+    <div class="tile">
+      <div class="tile-label">Total Page Views</div>
+      <div class="tile-val" id="total-views">—</div>
+      <div class="tile-sub">All pages combined</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Unique Visitors</div>
+      <div class="tile-val green" id="total-users">—</div>
+      <div class="tile-sub">Last 30 days</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Card Clicks</div>
+      <div class="tile-val purple" id="total-clicks">—</div>
+      <div class="tile-sub">link_click events</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Avg. Time on Page</div>
+      <div class="tile-val" id="avg-time">—</div>
+      <div class="tile-sub">Engagement duration</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Top Page</div>
+      <div class="tile-val" style="font-size:20px; color:#fff;" id="top-page">—</div>
+      <div class="tile-sub">Most viewed</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Pages Tracked</div>
+      <div class="tile-val">5</div>
+      <div class="tile-sub">Active HTML files</div>
+    </div>
+  </div>
+
+  <!-- PAGE-BY-PAGE TABLE -->
+  <div class="section-header">
+    <span class="section-label">02 // pages</span>
+    <div class="section-rule"></div>
+  </div>
+  <h2>Per-Page Breakdown</h2>
+  <p class="section-sub">Views and interactions for each page. Connect GA4 Data API to populate live numbers.</p>
+
+  <div class="pages-table">
+
+    <!-- INDEX -->
+    <a href="index.html" class="page-row" data-pct="100">
+      <div class="view-bar" style="width:100%"></div>
+      <div class="rank top">1</div>
+      <div class="page-info">
+        <div class="page-title-row">
+          <span class="page-name">Home — Index</span>
+          <span class="page-url">index.html</span>
+        </div>
+        <div class="page-tags">
+          <span class="tag tag-live">Live</span>
+          <span class="tag tag-phyai">PhyAI</span>
+          <span class="tag tag-quantum">Quantum</span>
+          <span class="tag tag-vedic">Vedic</span>
+        </div>
+      </div>
+      <div class="page-metrics">
+        <div class="metric">
+          <span class="metric-val" data-metric="views">—</span>
+          <span class="metric-label">Views</span>
+        </div>
+        <div class="metric">
+          <span class="metric-val green" data-metric="clicks">—</span>
+          <span class="metric-label">Clicks</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- NV QUANTUM -->
+    <a href="nv-quantum-requirements.html" class="page-row" data-pct="75">
+      <div class="view-bar" style="width:75%"></div>
+      <div class="rank top">2</div>
+      <div class="page-info">
+        <div class="page-title-row">
+          <span class="page-name">NV-Center Quantum Computer</span>
+          <span class="page-url">nv-quantum-requirements.html</span>
+        </div>
+        <div class="page-tags">
+          <span class="tag tag-live">Live</span>
+          <span class="tag tag-quantum">Quantum</span>
+        </div>
+      </div>
+      <div class="page-metrics">
+        <div class="metric">
+          <span class="metric-val" data-metric="views">—</span>
+          <span class="metric-label">Views</span>
+        </div>
+        <div class="metric">
+          <span class="metric-val green" data-metric="clicks">—</span>
+          <span class="metric-label">Clicks</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- SAFE QC -->
+    <a href="safe-qc-system.html" class="page-row" data-pct="60">
+      <div class="view-bar" style="width:60%"></div>
+      <div class="rank">3</div>
+      <div class="page-info">
+        <div class="page-title-row">
+          <span class="page-name">Hazard-Free NMR Quantum Computer</span>
+          <span class="page-url">safe-qc-system.html</span>
+        </div>
+        <div class="page-tags">
+          <span class="tag tag-live">Live</span>
+          <span class="tag tag-safe">Safe Build</span>
+          <span class="tag tag-quantum">NMR</span>
+        </div>
+      </div>
+      <div class="page-metrics">
+        <div class="metric">
+          <span class="metric-val" data-metric="views">—</span>
+          <span class="metric-label">Views</span>
+        </div>
+        <div class="metric">
+          <span class="metric-val green" data-metric="clicks">—</span>
+          <span class="metric-label">Clicks</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- SARVAM AI -->
+    <a href="sarvam-ai-edge-computing.html" class="page-row" data-pct="45">
+      <div class="view-bar" style="width:45%"></div>
+      <div class="rank">4</div>
+      <div class="page-info">
+        <div class="page-title-row">
+          <span class="page-name">Sarvam AI — Edge Compute</span>
+          <span class="page-url">sarvam-ai-edge-computing.html</span>
+        </div>
+        <div class="page-tags">
+          <span class="tag tag-live">Live</span>
+          <span class="tag tag-phyai">PhyAI</span>
+        </div>
+      </div>
+      <div class="page-metrics">
+        <div class="metric">
+          <span class="metric-val" data-metric="views">—</span>
+          <span class="metric-label">Views</span>
+        </div>
+        <div class="metric">
+          <span class="metric-val green" data-metric="clicks">—</span>
+          <span class="metric-label">Clicks</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- CONSCIOUSNESS -->
+    <a href="consciousness-and-quantum-collapse-correlation-testing.html" class="page-row" data-pct="30">
+      <div class="view-bar" style="width:30%"></div>
+      <div class="rank">5</div>
+      <div class="page-info">
+        <div class="page-title-row">
+          <span class="page-name">Does Expectation Resist Quantum Collapse?</span>
+          <span class="page-url">consciousness-and-quantum-collapse-correlation-testing.html</span>
+        </div>
+        <div class="page-tags">
+          <span class="tag tag-exp">Live Experiment</span>
+          <span class="tag tag-quantum">Quantum</span>
+          <span class="tag tag-vedic">Vedic</span>
+        </div>
+      </div>
+      <div class="page-metrics">
+        <div class="metric">
+          <span class="metric-val" data-metric="views">—</span>
+          <span class="metric-label">Views</span>
+        </div>
+        <div class="metric">
+          <span class="metric-val green" data-metric="clicks">—</span>
+          <span class="metric-label">Clicks</span>
+        </div>
+      </div>
+    </a>
+
+  </div><!-- /pages-table -->
+
+  <!-- LOOKER STUDIO EMBED SECTION -->
+  <div class="section-header">
+    <span class="section-label">03 // live embed</span>
+    <div class="section-rule"></div>
+  </div>
+  <h2>Embed a Live GA4 Dashboard Here</h2>
+  <p class="section-sub">Use Google Looker Studio (free) to create a live chart that embeds directly into this page with a single iframe.</p>
+
+  <div class="ga-embed">
+    <div class="ga-embed-title">🔗 How to embed your real GA4 data (free, ~10 min)</div>
+    <div class="ga-embed-sub">Replace the placeholder below with your Looker Studio embed iframe once set up.</div>
+
+    <!-- Placeholder showing where the iframe goes -->
+    <div style="width:100%; height:400px; border:1px dashed var(--border); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:var(--surface2);">
+      <i class="fa-solid fa-chart-line" style="font-size:40px; color:var(--muted); opacity:0.5;"></i>
+      <div style="font-size:14px; color:var(--muted); text-align:center; max-width:400px; line-height:1.6;">
+        Your Looker Studio live chart will appear here.<br>
+        Follow the steps below to connect GA4 and embed.
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--border);">
+        &lt;iframe src="https://lookerstudio.google.com/embed/reporting/YOUR_REPORT_ID/page/..." /&gt;
+      </div>
+    </div>
+
+    <a href="https://lookerstudio.google.com" target="_blank" class="ga-cta">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      Open Looker Studio (free)
+    </a>
+  </div>
+
+  <!-- SETUP INSTRUCTIONS -->
+  <div class="section-header">
+    <span class="section-label">04 // setup</span>
+    <div class="section-rule"></div>
+  </div>
+  <h2>Complete Setup Checklist</h2>
+  <p class="section-sub">Everything you need to go from placeholder <code style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent3);">—</code> to real live numbers.</p>
+
+  <div class="embed-block">
+    <div class="embed-title">Step-by-step: activate your analytics</div>
+    <div class="embed-sub">All free. No paid tools required.</div>
+    <div class="embed-steps">
+      <div class="embed-step">
+        <div class="step-num">1</div>
+        <div>Go to <strong style="color:#e8edf5;">analytics.google.com</strong> → Admin → <strong style="color:#e8edf5;">Create Property</strong>. Enter your site name and timezone. Click Next → Create.</div>
+      </div>
+      <div class="embed-step">
+        <div class="step-num">2</div>
+        <div>Under the new property → <strong style="color:#e8edf5;">Data Streams → Web</strong> → enter your URL → Create Stream. You'll get a Measurement ID like <code>G-8Y8EYHB278</code>.</div>
+      </div>
+      <div class="embed-step">
+        <div class="step-num">3</div>
+        <div>In every HTML file in this project, find <code>G-8Y8EYHB278</code> and replace it with your real ID. Files: <code>index.html</code>, <code>nv-quantum-requirements.html</code>, <code>safe-qc-system.html</code>, <code>sarvam-ai-edge-computing.html</code>, <code>consciousness-and-quantum-collapse-correlation-testing.html</code>, <code>stats.html</code>.</div>
+      </div>
+      <div class="embed-step">
+        <div class="step-num">4</div>
+        <div>Deploy your files to a web host (GitHub Pages, Netlify, Vercel — all free). Visit your pages. Check GA4 <strong style="color:#e8edf5;">Reports → Realtime</strong> to verify tracking is working.</div>
+      </div>
+      <div class="embed-step">
+        <div class="step-num">5</div>
+        <div><strong style="color:#e8edf5;">(For live embed here)</strong> Go to <a href="https://lookerstudio.google.com" target="_blank" style="color:var(--accent);">lookerstudio.google.com</a> → Create → Report → connect your GA4 property. Build a pages table or bar chart. Click Share → Embed report → copy the <code>&lt;iframe&gt;</code> tag and paste it into the embed section above in this file.</div>
+      </div>
+      <div class="embed-step">
+        <div class="step-num">6</div>
+        <div>Add a link to this <code>stats.html</code> page in your site footer so visitors can see public stats. GA4 data is private to you — only what you choose to embed here is public.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<footer>
+  <div class="page" style="padding-bottom:0;">
+    Quantum Build Series · Public Stats · Powered by <a href="https://analytics.google.com" target="_blank">Google Analytics 4</a> + <a href="https://lookerstudio.google.com" target="_blank">Looker Studio</a>
+  </div>
+</footer>
+
+<script>
+  // ── Update "last updated" timestamp ──
+  document.getElementById('last-updated').textContent =
+    'Last updated: ' + new Date().toLocaleDateString('en-IN', {
+      day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'
+    });
+
+  // ── Animate view bars on load ──
+  document.addEventListener('DOMContentLoaded', function () {
+    const bars = document.querySelectorAll('.view-bar');
+    bars.forEach(function(bar, i) {
+      const row = bar.closest('.page-row');
+      const pct = row ? row.dataset.pct : '0';
+      bar.style.width = '0%';
+      setTimeout(function() {
+        bar.style.width = pct + '%';
+      }, 200 + i * 120);
+    });
+  });
+
+  /*
+   * ── TO CONNECT REAL GA4 DATA ──────────────────────────────────────
+   * Once you have a GA4 property, you can use the GA4 Data API to
+   * fetch real page-view counts and populate the tiles + rows above.
+   *
+   * Option A (recommended): Embed a Looker Studio report in section 03.
+   *   → No code needed. Drag-and-drop dashboard in Looker Studio,
+   *     share as embedded iframe, paste it into this file.
+   *
+   * Option B (developer): Call the GA4 Data API from a backend
+   *   (Node/Python) and inject numbers into the DOM on page load.
+   *   Endpoint: https://analyticsdata.googleapis.com/v1beta/
+   *   Docs: https://developers.google.com/analytics/devguides/reporting/data/v1
+   *
+   * The tile IDs and data-metric attributes are ready to receive
+   * injected values when you connect either option.
+   * ──────────────────────────────────────────────────────────────────
+   */
+</script>
+</body>
+</html>
