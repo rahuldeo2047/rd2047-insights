@@ -871,28 +871,62 @@ async function loadFromFirebase(limit = 200) {
 
 // ── QRNG ─────────────────────────────────────────────────
 let qBuf = [], qSrc = 'init', qFetching = false;
-const QRNG_PROXIES = [
-  'https://corsproxy.io/?url=' + encodeURIComponent('https://qrng.anu.edu.au/API/jsonI.php?length=64&type=uint8'),
-  'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://qrng.anu.edu.au/API/jsonI.php?length=64&type=uint8'),
-];
 
+const QRNG_URL = 'https://qrng.anu.edu.au/API/jsonI.php?length=64&type=uint8';
+ 
+const QRNG_PROXIES = [
+  // Proxy 1 — corsproxy.io (good desktop, sometimes blocked mobile)
+  'https://corsproxy.io/?url=' + encodeURIComponent(QRNG_URL),
+  // Proxy 2 — allorigins (different CDN, better mobile reach)
+  'https://api.allorigins.win/raw?url=' + encodeURIComponent(QRNG_URL),
+  // Proxy 3 — thingproxy (another fallback)
+  'https://thingproxy.freeboard.io/fetch/' + QRNG_URL,
+  // Proxy 4 — corsproxy.io alternative format
+  'https://cors-anywhere.herokuapp.com/' + QRNG_URL,
+];
+ 
 async function fetchQRNG() {
   if (qFetching) return;
   qFetching = true;
   let ok = false;
+ 
   for (const url of QRNG_PROXIES) {
     try {
-      const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
-      const j = await r.json();
-      if (j?.success && Array.isArray(j.data) && j.data.length) {
-        qBuf.push(...j.data); setQSrc('quantum'); ok = true; break;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000); // 5s per proxy
+      const r = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' }
+      });
+      clearTimeout(timeout);
+      const text = await r.text();
+      // Parse carefully — some proxies wrap the response
+      let j;
+      try { j = JSON.parse(text); } catch {
+        // allorigins wraps in {contents:"..."}
+        const inner = JSON.parse(text)?.contents;
+        if (inner) j = JSON.parse(inner);
       }
-    } catch {}
+      if (j?.success && Array.isArray(j.data) && j.data.length) {
+        qBuf.push(...j.data);
+        setQSrc('quantum');
+        ok = true;
+        break;
+      }
+    } catch (e) {
+      // This proxy failed — try next one silently
+      continue;
+    }
   }
+ 
   if (!ok) {
-    const a = new Uint8Array(64); crypto.getRandomValues(a);
-    qBuf.push(...a); setQSrc('crypto');
+    // All proxies failed (common on mobile cellular) — fall back to crypto
+    const a = new Uint8Array(64);
+    crypto.getRandomValues(a);
+    qBuf.push(...a);
+    setQSrc('crypto');
   }
+ 
   qFetching = false;
 }
 
