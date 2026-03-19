@@ -644,6 +644,11 @@ input[type=range]#confSlider::-moz-range-thumb{
         <div class="mode-selected-display" id="modeSelectedDisplay">POST</div>
         <div class="mode-badge" id="modeBadge">QRNG BEFORE GUESS</div>
       </div>
+      <div style="margin-top:16px;">
+        <button class="abtn p" id="startBtn" onclick="startSession()" style="width:100%;padding:14px;font-size:11px;letter-spacing:4px;">
+          ▶ &nbsp; START EXPERIMENT
+        </button>
+      </div>
     </div>
 
     <!-- Experiment -->
@@ -1100,6 +1105,12 @@ function selectMode(mode) {
   );
   document.getElementById('modeSelectedDisplay').textContent = MODES[mode].label;
   document.getElementById('modeBadge').textContent = MODES[mode].badge;
+  // Update the live testId line so user sees mode change immediately
+  if (S && S.testId) {
+    document.getElementById('testIdLine').textContent =
+      'TEST: ' + S.testId + '  ·  MODE: ' + mode;
+  }
+  plog(`⚙ Mode selected: ${mode} — ${MODES[mode].badge}`, 'var(--accent)');
 }
 
 // ── Experiment State ──────────────────────────────────────
@@ -1252,6 +1263,28 @@ function stopArc() {
   document.getElementById('timerArc').style.strokeDashoffset = 0;
 }
 
+// ── Session start — called by START EXPERIMENT button ────
+function startSession() {
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('startBtn').textContent = '⏳  RUNNING…';
+  initS();
+  S.experimentMode = currentMode;
+  S.participantId = participantId;
+  document.getElementById('testIdLine').textContent =
+    'TEST: ' + S.testId + '  ·  MODE: ' + currentMode;
+  setBox('blue');
+  buildLogNoActive();
+  updStats();
+  // Clear process log
+  const pl = document.getElementById('processLog');
+  if (pl) pl.innerHTML = '';
+  plog(`▶ Session started · testId: ${S.testId}`, 'var(--accent)');
+  plog(`⚙ Mode: ${currentMode} — ${MODES[currentMode].badge}`, 'var(--accent)');
+  plog(`👤 Participant: ${participantId}`, 'var(--muted)');
+  setInstr('Session starting…', true);
+  setTimeout(() => runExperiment(), 600);
+}
+
 // ── Async experiment loop — 5 modes, no callbacks, no races ──
 let roundLoopRunning = false;
 
@@ -1282,21 +1315,25 @@ async function runExperiment() {
       qrngSampledAt = Date.now();
       S.nextColor = await randColor();
       if (S.phase === 'done') break;
+      plog(`⬡ QRNG sampled [${mode}] · result pre-loaded · src: ${qSrc}`, 'var(--muted)');
     }
 
     // BLIND: schedule QRNG at a random time during observe+guess window (0–10s)
     if (mode === 'BLIND') {
       const blindDelay = Math.floor(Math.random() * (T_OBS + T_GUESS));
+      plog(`⬡ BLIND mode · QRNG will fire in ~${(blindDelay/1000).toFixed(1)}s (hidden)`, 'var(--muted)');
       setTimeout(async () => {
         if (S.phase === 'done') return;
         qrngSampledAt = Date.now();
         S.nextColor = await randColor();
         blindScheduled = true;
+        plog(`⬡ BLIND QRNG fired · result locked · src: ${qSrc}`, 'var(--muted)');
       }, blindDelay);
     }
 
     clrSel(); setBtns(false); showConfSlider(false);
     setRes('—'); setRlbl(); buildLogNoActive();
+    plog(`── Round ${S.round+1} · OBSERVE phase · ${mode}`, 'var(--accent)');
     document.getElementById('phaseLbl').textContent =
       `Round ${S.round+1} of ${TOT} · Observe [${mode}]`;
     runArc(T_OBS, 'var(--accent)');
@@ -1314,6 +1351,7 @@ async function runExperiment() {
     S.phase = 'guess';
     S.userGuess = null;
     S.guessStartTime = Date.now();
+    plog(`⚡ GUESS phase open · 10s window · waiting for click`, 'var(--yellow)');
     document.getElementById('phaseLbl').textContent = `Round ${S.round+1} · Lock expectation`;
     setBtns(true); showConfSlider(true); buildLog();
     runArc(T_GUESS, '#ffc300');
@@ -1347,6 +1385,7 @@ async function runExperiment() {
       qrngSampledAt = Date.now();
       S.nextColor = await randColor();
       if (S.phase === 'done') break;
+      plog(`⬡ QRNG sampled AFTER click [PRE] · expectation preceded collapse · src: ${qSrc}`, 'var(--accentg)');
     }
 
     // SIMULTANEOUS: draw QRNG at exact click tick
@@ -1354,6 +1393,7 @@ async function runExperiment() {
       qrngSampledAt = S.guessStartTime + (reactionMs || 0);
       S.nextColor = await randColor();
       if (S.phase === 'done') break;
+      plog(`⬡ QRNG sampled SIMULTANEOUSLY with click · src: ${qSrc}`, 'var(--accentg)');
     }
 
     // BLIND: if QRNG hasn't fired yet (user clicked very fast), draw now
@@ -1361,12 +1401,15 @@ async function runExperiment() {
       qrngSampledAt = Date.now();
       S.nextColor = await randColor();
       if (S.phase === 'done') break;
+      plog(`⬡ BLIND QRNG fired at click (was faster than scheduled) · src: ${qSrc}`, 'var(--muted)');
     }
 
-    // Compute collapseOffset: ms between QRNG draw and click
-    // negative = QRNG before click, 0 = simultaneous, positive = QRNG after click
+    // Compute collapseOffset
     const collapseOffset = (qrngSampledAt && guessMadeAt)
       ? qrngSampledAt - guessMadeAt : null;
+    if (collapseOffset !== null) {
+      plog(`⏱ collapseOffset: ${collapseOffset}ms · reactionTime: ${reactionMs}ms`, 'var(--muted)');
+    }
 
     // Brief pause if user clicked so they see the locked message
     if (userActed) await sleep(900);
@@ -1377,6 +1420,7 @@ async function runExperiment() {
       S.phase = 'delay';
       setBox('blue');
       runArc(T_DELAY, 'var(--muted)');
+      plog(`⏳ DELAYED mode · result held for 5s`, 'var(--yellow)');
       for (let s = Math.ceil(T_DELAY/1000); s >= 1; s--) {
         if (S.phase === 'done') { roundLoopRunning = false; return; }
         setInstr(`DELAYED REVEAL · ${s}s — result held back`);
@@ -1390,12 +1434,14 @@ async function runExperiment() {
     // ════════════════════════════════════════════════════════
     S.phase = 'reveal';
     const actual = S.nextColor;
-    if (!actual) { // safety — shouldn't happen
+    if (!actual) {
+      plog(`⚠ QRNG error — round replayed`, 'var(--red)');
       setInstr('QRNG error — round replayed'); await sleep(1500); setBox('blue'); continue;
     }
     setBox(actual);
 
     if (!userActed || !S.userGuess) {
+      plog(`⏱ TIMEOUT · no input · round not counted`, 'var(--muted)');
       setRes('⏱ TIME OUT · No input — round not counted', '');
       setInstr('No input. Round not counted. Restarting…');
       runArc(1500, 'var(--muted)');
@@ -1408,6 +1454,7 @@ async function runExperiment() {
       S.attentionValues.push(att);
       S.log.push({type:'yev', guess:S.userGuess, actual,
         attentionPct:att, reactionMs, collapseOffset, qrngSampledAt, guessMadeAt});
+      plog(`◆ ANOMALY · yellow event · round replayed (unscored)`, 'var(--yellow)');
       setRes('◆ QUANTUM ANOMALY · Yellow · Unscored', 'yev');
       setInstr(`Anomaly — unscored. Reaction: ${reactionSec}s`);
       runArc(T_REV, '#ffc300');
@@ -1420,6 +1467,7 @@ async function runExperiment() {
       S.attentionValues.push(att);
       S.log.push({type:'hit', guess:S.userGuess, actual,
         attentionPct:att, reactionMs, collapseOffset, qrngSampledAt, guessMadeAt});
+      plog(`✓ CONFIRMED · guessed ${S.userGuess} · got ${actual} · conf ${att}% · RT ${reactionSec}s`, 'var(--accentg)');
       setRes(`✓ CONFIRMED · ${S.userGuess.toUpperCase()} · Conf ${att}% · RT ${reactionSec}s`, 'hit');
       setInstr('Expectation aligned with quantum collapse.');
       runArc(T_REV, 'var(--accentg)');
@@ -1429,6 +1477,7 @@ async function runExperiment() {
       S.attentionValues.push(att);
       S.log.push({type:'miss', guess:S.userGuess, actual,
         attentionPct:att, reactionMs, collapseOffset, qrngSampledAt, guessMadeAt});
+      plog(`✗ VIOLATED · guessed ${S.userGuess} · got ${actual} · conf ${att}% · RT ${reactionSec}s`, 'var(--red)');
       setRes(`✗ VIOLATED · Expected ${S.userGuess.toUpperCase()} · Got ${actual.toUpperCase()} · Conf ${att}% · RT ${reactionSec}s`, 'miss');
       setInstr('Expectation resisted. Hypothesis point logged.');
       runArc(T_REV, 'var(--red)');
@@ -1438,6 +1487,7 @@ async function runExperiment() {
     await sleep(T_REV);
     if (S.phase === 'done') break;
 
+    plog(`── Round ${S.round+1} complete · advancing`, 'var(--muted)');
     S.round++;
     S.nextColor = null;
     setBox('blue');
@@ -1452,10 +1502,11 @@ function guess(c) {
   if (S.phase !== 'guess' || S.userGuess) return;
   S.userGuess = c;
   S.pendingAtt = confSource === 'eeg' ? confValue : parseInt(document.getElementById('confSlider').value);
-  S.pendingReactionMs = Date.now() - (S.guessStartTime || Date.now()); // ms since guess phase opened
+  S.pendingReactionMs = Date.now() - (S.guessStartTime || Date.now());
   S.phase = 'clicked';
   document.getElementById(c === 'red' ? 'btnR' : 'btnG').classList.add('sel');
-  const reactionSec = (S.pendingReactionMs / 1000).toFixed(1);
+  const reactionSec = (S.pendingReactionMs / 1000).toFixed(2);
+  plog(`✦ CLICK · ${c.toUpperCase()} · conf: ${S.pendingAtt}% · RT: ${reactionSec}s`, 'var(--accent)');
   setInstr(`Locked at ${S.pendingAtt}% confidence · ${reactionSec}s reaction time. Collapsing…`);
   stopArc();
 }
@@ -1532,6 +1583,9 @@ async function showFinal() {
     deviceInfo:          deviceInfo,
   };
   const saved = await saveToFirebase(rec);
+  plog(`${saved ? '✓ Saved to Firebase · testId: '+S.testId : '✗ Firebase save failed · data not persisted'}`,
+    saved ? 'var(--accentg)' : 'var(--red)');
+  plog(`■ Session complete · ${S.hits} hits · ${S.misses} misses · antiCorr: ${antiPct}%`, 'var(--accent)');
 
   // Display
   document.getElementById('finalPanel').style.display = 'block';
@@ -1561,17 +1615,23 @@ async function showFinal() {
 
 function restart() {
   document.getElementById('finalPanel').style.display = 'none';
-  S.phase = 'done';        // kills any running loop iteration
-  roundLoopRunning = false; // allows new loop to start
+  S.phase = 'done';
+  roundLoopRunning = false;
   stopArc();
+  // Re-enable start button so user can change mode before restarting
+  const btn = document.getElementById('startBtn');
+  if (btn) { btn.disabled = false; btn.textContent = '▶ \u00a0 START EXPERIMENT'; }
   initS();
   S.experimentMode = currentMode;
   S.participantId = participantId;
   setBox('blue'); buildLogNoActive(); updStats();
   setRes('—'); clrSel(); setBtns(false);
   showConfSlider(false);
-  setInstr('Starting new session…', true);
-  setTimeout(() => runExperiment(), 900);
+  // Clear log
+  const pl = document.getElementById('processLog');
+  if (pl) pl.innerHTML = '';
+  plog(`↺ Session reset · select mode and press START`, 'var(--muted)');
+  setInstr('Select a mode above and press START EXPERIMENT.', true);
 }
 
 // ── Charts ────────────────────────────────────────────────
@@ -1744,13 +1804,14 @@ window.onload = async () => {
   setTimeout(()=>ld.style.display='none', 500);
 
   initS();
-  S.experimentMode = currentMode;  
+  S.experimentMode = currentMode;
   S.participantId = savedPid;
   setBox('blue');
   buildLogNoActive();
   updStats();
-  setInstr('Starting experiment…', true);
-  setTimeout(() => runExperiment(), 900);
+  plog(`✓ System ready · participant: ${savedPid}`, 'var(--accentg)');
+  plog(`⚙ Default mode: POST · select a mode and press START`, 'var(--muted)');
+  setInstr('Select a mode above and press <strong>START EXPERIMENT</strong>.', false);
 };
 </script>
 </body>
