@@ -719,6 +719,22 @@ input[type=range]#confSlider::-moz-range-thumb{
       </div>
     </div>
 
+     <!-- Process Log -->
+   <div class="panel">
+     <div class="plbl">Process Log — Live Code Flow</div>
+     <div id="processLog" style="
+       font-size:10px;
+       letter-spacing:1.5px;
+       line-height:2;
+       color:var(--muted);
+       max-height:180px;
+       overflow-y:auto;
+       font-family:var(--font-mono);
+     ">
+       <div style="color:var(--accent);">— Waiting for session start —</div>
+     </div>
+   </div>
+
     <!-- Round log + stats -->
     <div class="panel">
       <div class="plbl">Round Log</div>
@@ -1132,6 +1148,24 @@ function setInstr(html, bl=false) {
   el.innerHTML = html; el.classList.toggle('blink', bl);
 }
 
+// Process log — appends timestamped entries, keeps last 20
+function plog(msg, col) {
+  const el = document.getElementById('processLog');
+  if (!el) return;
+  const now = new Date();
+  const ts = now.toTimeString().slice(0,8);
+  const div = document.createElement('div');
+  div.style.color = col || 'var(--text)';
+  div.style.borderBottom = '1px solid var(--border)';
+  div.style.paddingBottom = '2px';
+  div.innerHTML = `<span style="color:var(--muted);margin-right:8px;">${ts}</span>${msg}`;
+  el.appendChild(div);
+  // Keep last 20 entries
+  while (el.children.length > 20) el.removeChild(el.firstChild);
+  // Auto-scroll to bottom
+  el.scrollTop = el.scrollHeight;
+}
+
 function setBtns(on) {
   document.getElementById('btnR').disabled = !on;
   document.getElementById('btnG').disabled = !on;
@@ -1531,6 +1565,7 @@ function restart() {
   roundLoopRunning = false; // allows new loop to start
   stopArc();
   initS();
+  S.experimentMode = currentMode;
   S.participantId = participantId;
   setBox('blue'); buildLogNoActive(); updStats();
   setRes('—'); clrSel(); setBtns(false);
@@ -1709,6 +1744,7 @@ window.onload = async () => {
   setTimeout(()=>ld.style.display='none', 500);
 
   initS();
+  S.experimentMode = currentMode;  
   S.participantId = savedPid;
   setBox('blue');
   buildLogNoActive();
