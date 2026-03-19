@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIY NV-Center Quantum Computer — 2025 Build Guide</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #080c14;
+      --surface: #0d1421;
+      --surface2: #121a2b;
+      --border: #1e2d47;
+      --accent: #00e5ff;
+      --accent2: #7b5ff5;
+      --accent3: #00ff9d;
+      --danger: #ff4757;
+      --warn: #ffa502;
+      --text: #e8edf5;
+      --muted: #667399;
+      --glow: rgba(0,229,255,0.15);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* === GRID NOISE BACKGROUND === */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* === HERO === */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 24px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(36px, 6vw, 72px);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .hero-sub {
+      max-width: 680px;
+      margin: 0 auto 40px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 36px;
+      color: var(--accent);
+      display: block;
+    }
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    /* === SECTION HEADERS === */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .section-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+    h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(24px, 3vw, 36px);
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .section-desc {
+      color: var(--muted);
+      max-width: 600px;
+      margin-bottom: 32px;
+      font-size: 15px;
+    }
+
+    /* === CARDS === */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      border-color: rgba(0,229,255,0.3);
+      box-shadow: 0 0 40px rgba(0,229,255,0.05);
+    }
+
+    /* === SKILL SECTION === */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 64px;
+    }
+    @media (max-width: 768px) { .skills-grid { grid-template-columns: 1fr; } }
+    .skill-pills { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    .skill-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+    .skill-icon {
+      font-size: 20px;
+      width: 36px;
+      text-align: center;
+    }
+    .skill-name { font-weight: 600; font-size: 14px; }
+    .skill-level {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+    }
+    .skill-bar-wrap { height: 3px; background: var(--border); border-radius: 2px; margin-top: 4px; width: 100%; }
+    .skill-bar { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .chart-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 320px;
+    }
+
+    /* === HARDWARE TABS === */
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+    .tab-btn.active {
+      background: rgba(0,229,255,0.08);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .hw-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 768px) { .hw-grid { grid-template-columns: 1fr; } }
+
+    .component-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .component-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.2s;
+    }
+    .component-item:hover { border-color: rgba(0,229,255,0.2); }
+    .component-bullet {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: 7px;
+      flex-shrink: 0;
+    }
+    .component-bullet.purple { background: var(--accent2); }
+    .component-bullet.green { background: var(--accent3); }
+    .component-name { font-weight: 600; font-size: 14px; color: #fff; margin-bottom: 2px; }
+    .component-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .component-alt {
+      display: inline-flex;
+      margin-top: 6px;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent3);
+      background: rgba(0,255,157,0.06);
+      border: 1px solid rgba(0,255,157,0.2);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .component-alt::before { content: '✦ 2025 alt:'; }
+
+    .code-panel {
+      background: #060a10;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      color: #667399;
+      height: 100%;
+    }
+    .code-panel .c-comment { color: #3a4d6e; }
+    .code-panel .c-key { color: var(--accent); }
+    .code-panel .c-val { color: var(--accent3); }
+    .code-panel .c-warn { color: var(--warn); }
+    .code-panel .c-str { color: #c792ea; }
+    .code-panel .c-head { color: #fff; font-size: 13px; margin-bottom: 8px; display: block; }
+
+    /* === UPDATE BANNER === */
+    .update-card {
+      background: linear-gradient(135deg, rgba(123,95,245,0.08), rgba(0,229,255,0.05));
+      border: 1px solid rgba(123,95,245,0.3);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 64px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .update-icon { font-size: 28px; flex-shrink: 0; }
+    .update-title { font-weight: 700; font-size: 16px; color: var(--accent2); margin-bottom: 8px; }
+    .update-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .update-item {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(123,95,245,0.15);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+    .update-item strong { color: #fff; display: block; margin-bottom: 3px; font-size: 12px; }
+    .update-item span { color: var(--muted); font-size: 12px; }
+
+    /* === ENVIRONMENT SECTION === */
+    .env-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 64px;
+    }
+    @media (max-width: 768px) { .env-grid { grid-template-columns: 1fr; } }
+
+    .env-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .env-card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .env-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .env-item {
+      display: flex;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .env-item-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent); margin-top: 8px; flex-shrink: 0;
+    }
+    .env-item strong { color: var(--text); }
+
+    /* === SAFETY SECTION === */
+    .safety-banner {
+      background: rgba(255,71,87,0.05);
+      border: 1px solid rgba(255,71,87,0.3);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 64px;
+    }
+    .safety-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .safety-icon { font-size: 28px; }
+    .safety-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--danger); }
+    .safety-subtitle { font-size: 14px; color: rgba(255,71,87,0.7); }
+    .safety-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .safety-item {
+      background: rgba(255,71,87,0.04);
+      border: 1px solid rgba(255,71,87,0.15);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .safety-item-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--danger);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .safety-item p { font-size: 13px; color: rgba(232,237,245,0.65); line-height: 1.6; }
+
+    /* === ROADMAP === */
+    .roadmap {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 64px;
+      position: relative;
+    }
+    .roadmap::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2), transparent);
+    }
+    .roadmap-step {
+      display: flex;
+      gap: 24px;
+      padding: 24px 0 24px 0;
+    }
+    .step-dot {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      flex-shrink: 0;
+      z-index: 1;
+    }
+    .step-content {
+      flex: 1;
+      padding-top: 8px;
+    }
+    .step-title { font-weight: 700; font-size: 16px; color: #fff; margin-bottom: 6px; }
+    .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .step-time {
+      display: inline-block;
+      margin-top: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent2);
+      background: rgba(123,95,245,0.1);
+      border: 1px solid rgba(123,95,245,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* === FOOTER === */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* === DIVIDER === */
+    .section-spacer { height: 64px; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="badge"><span class="dot"></span> Research-Updated Build Guide · March 2025</div>
+    <h1>Build Your Own<br /><em>Quantum Computer</em></h1>
+    <p class="hero-sub">
+      A complete, research-updated requirements guide for building an NV-Center diamond quantum computer — incorporating the latest open-source community hardware, modern alternatives, and 2025 field advances.
+    </p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">3</span><span class="stat-label">Subsystems</span></div>
+      <div class="stat"><span class="stat-num">5</span><span class="stat-label">Skill Domains</span></div>
+      <div class="stat"><span class="stat-num">300K+</span><span class="stat-label">Shots per Experiment</span></div>
+      <div class="stat"><span class="stat-num">2.87</span><span class="stat-label">GHz Zero-Field Split</span></div>
+    </div>
+  </header>
+
+  <!-- RESEARCH UPDATE BANNER -->
+  <div class="update-card">
+    <div class="update-icon">🔬</div>
+    <div>
+      <div class="update-title">2025 Research Updates — What's Changed</div>
+      <div style="color: var(--muted); font-size: 14px;">
+        Since the original requirements were drafted, the open-source quantum community and academic institutions have made significant strides. Key discoveries and projects to know about:
+      </div>
+      <div class="update-grid">
+        <div class="update-item">
+          <strong>QuantumVillage UncutGem (2024–25)</strong>
+          <span>First fully open-source NV-center diamond magnetometer with KiCad schematics, full firmware, and JLCPCB-compatible PCB files.</span>
+        </div>
+        <div class="update-item">
+          <strong>Quantum Brilliance QDK 2.0</strong>
+          <span>Room-temp NV diamond processor in a 19" rack unit. Deployed at Oak Ridge National Lab & Fraunhofer IAF in 2024.</span>
+        </div>
+        <div class="update-item">
+          <strong>SnV Center Alternative</strong>
+          <span>Fujitsu research shows Tin-Vacancy (SnV) centers offer 10× higher optical emission efficiency over NV, with lower electric-field noise.</span>
+        </div>
+        <div class="update-item">
+          <strong>Open Quantum Design (OQD)</strong>
+          <span>U. Waterloo nonprofit releasing all CAD models, optical layouts, and circuit designs for a 30-qubit trapped-ion system under open license.</span>
+        </div>
+        <div class="update-item">
+          <strong>NVIDIA CUDA-Q Dynamics</strong>
+          <span>New simulation library for NV center spin dynamics — model your control sequences in software before committing to hardware.</span>
+        </div>
+        <div class="update-item">
+          <strong>XeedQ 3D NV Architecture</strong>
+          <span>Leipzig startup arranges NV centers in 3D crystal structures for mutual dipole interaction — enabling >32 qubit systems without cryogenics.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKILL PROFILE -->
+  <section>
+    <div class="section-header">
+      <span class="section-num">01 // skills</span>
+      <div class="section-line"></div>
+    </div>
+    <h2>The Multidisciplinary Skillset</h2>
+    <p class="section-desc">Debugging a quantum computer means debugging physics. A failed qubit initialization could be a misaligned photon, an impedance mismatch at 3GHz, or a nanosecond timing error in Python.</p>
+
+    <div class="skills-grid">
+      <div class="card">
+        <div class="skill-pills">
+          <div class="skill-pill">
+            <span class="skill-icon">⚛️</span>
+            <div style="flex:1">
+              <div class="skill-name">Quantum Physics</div>
+              <div class="skill-bar-wrap"><div class="skill-bar" style="width:80%"></div></div>
+            </div>
+            <span class="skill-level">8/10</span>
+          </div>
+          <div class="skill-pill">
+            <span class="skill-icon">🔭</span>
+            <div style="flex:1">
+              <div class="skill-name">Optical Alignment</div>
+              <div class="skill-bar-wrap"><div class="skill-bar" style="width:90%"></div></div>
+            </div>
+            <span class="skill-level">9/10</span>
+          </div>
+          <div class="skill-pill">
+            <span class="skill-icon">📡</span>
+            <div style="flex:1">
+              <div class="skill-name">RF / Microwave Engineering</div>
+              <div class="skill-bar-wrap"><div class="skill-bar" style="width:70%"></div></div>
+            </div>
+            <span class="skill-level">7/10</span>
+          </div>
+          <div class="skill-pill">
+            <span class="skill-icon">💻</span>
+            <div style="flex:1">
+              <div class="skill-name">Python / FPGA Programming</div>
+              <div class="skill-bar-wrap"><div class="skill-bar" style="width:80%"></div></div>
+            </div>
+            <span class="skill-level">8/10</span>
+          </div>
+          <div class="skill-pill">
+            <span class="skill-icon">📊</span>
+            <div style="flex:1">
+              <div class="skill-name">Statistical Data Analysis</div>
+              <div class="skill-bar-wrap"><div class="skill-bar" style="width:60%"></div></div>
+            </div>
+            <span class="skill-level">6/10</span>
+          </div>
+          <div class="skill-pill">
+            <span class="skill-icon">🔩</span>
+            <div style="flex:1">
+              <div class="skill-name">PCB / Electronics Fabrication</div>
+              <div class="skill-bar-wrap"><div class="skill-bar" style="width:65%"></div></div>
+            </div>
+            <span class="skill-level">6.5/10</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="text-align:center; color: var(--muted); font-size:13px; margin-bottom:8px;">Skill Demand Profile — Radar View</div>
+        <div class="chart-wrap">
+          <canvas id="skillsRadar"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-spacer"></div>
+
+  <!-- HARDWARE TABS -->
+  <section>
+    <div class="section-header">
+      <span class="section-num">02 // hardware</span>
+      <div class="section-line"></div>
+    </div>
+    <h2>Component Breakdown</h2>
+    <p class="section-desc">Three major physical subsystems — each with updated 2025 alternatives where the community has found better or cheaper options.</p>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('optical', this)">🔦 Optical System</button>
+      <button class="tab-btn" onclick="switchTab('microwave', this)">📻 Microwave System</button>
+      <button class="tab-btn" onclick="switchTab('control', this)">🖥️ Control & Logic</button>
+      <button class="tab-btn" onclick="switchTab('diamond', this)">💎 The Qubit Substrate</button>
+    </div>
+
+    <!-- OPTICAL -->
+    <div id="panel-optical" class="tab-panel active">
+      <div class="hw-grid">
+        <ul class="component-list">
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">532nm Green DPSS Laser</div>
+              <div class="component-desc">Used to pump the NV center from ground state, initializing the qubit to |0⟩. Requires power stability &lt;0.5% to avoid initialization errors. Typical power: 50–300mW.</div>
+              <span class="component-alt">Coherent OBIS 532nm or CNI MGL-III-532 — more affordable than legacy choices, USB-controllable</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">Acousto-Optic Modulator (AOM)</div>
+              <div class="component-desc">Ultra-fast optical switch — pulses the laser in nanoseconds. Rise time matters: aim for &lt;10ns. Acts as your quantum gate timing backbone.</div>
+              <span class="component-alt">Gooch & Housego AOMO 3110-120 — common in open-source lab builds; Qubig also has compact options</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">Dichroic Mirror / Beam Splitter</div>
+              <div class="component-desc">Reflects 532nm green, transmits 630–800nm red NV emission. Critical for separating excitation path from detection path without mixing signals.</div>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">Objective Lens (High NA)</div>
+              <div class="component-desc">Focuses laser spot to sub-micron size on the diamond. Requires NA ≥ 0.9. Oil-immersion objectives (NA 1.3–1.4) maximize photon collection efficiency.</div>
+              <span class="component-alt">Olympus UPLXAPO 100× / Nikon CFI Plan Apo — used in most academic DIY builds</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">Avalanche Photodiode (APD)</div>
+              <div class="component-desc">Single-photon counting module (SPCM) — the "eye" that reads qubit state by counting individual red photons. Dark count rate &lt;100 cps is ideal.</div>
+              <span class="component-alt">Excelitas SPCM-AQRH — industry standard for DIY; PerkinElmer equivalent also well-documented</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">Optical Breadboard & Isolation</div>
+              <div class="component-desc">Stainless M6-threaded table, 12–25mm thick. Must sit on sorbothane vibration pads (or optical table legs). Walking footsteps must not be detectable by APD.</div>
+            </div>
+          </li>
+        </ul>
+        <div class="code-panel">
+<span class="c-head">// Optical Subsystem — Signal Flow</span>
+<span class="c-comment">// === EXCITATION PATH ===</span>
+<span class="c-key">Laser</span> <span style="color:#fff">→</span> <span class="c-val">AOM</span> <span style="color:#fff">→</span> <span class="c-val">Mirror</span> <span style="color:#fff">→</span> <span class="c-val">Objective</span>
+<span style="color:#667399">   ↓</span>
+<span class="c-key">Diamond</span> <span style="color:#fff">(NV absorbs @ 532nm)</span>
+
+<span class="c-comment">// === EMISSION PATH ===</span>
+<span class="c-key">Diamond</span> <span style="color:#fff">→</span> <span class="c-val">Objective</span> <span style="color:#fff">→</span> <span class="c-val">Dichroic</span>
+<span style="color:#667399">   ↓</span>
+<span class="c-key">Longpass Filter</span> <span style="color:#fff">(remove 532nm leakage)</span>
+<span style="color:#667399">   ↓</span>
+<span class="c-key">APD</span> <span style="color:#fff">(counts photons @ 637–800nm)</span>
+
+<span class="c-comment">// === KEY PARAMS ===</span>
+<span class="c-key">ZPL</span>     <span class="c-val">= 637nm</span>   <span class="c-comment">// Zero phonon line</span>
+<span class="c-key">PSB</span>     <span class="c-val">= ~700nm</span>  <span class="c-comment">// Phonon sideband peak</span>
+<span class="c-key">NA_min</span>  <span class="c-val">= 0.9</span>     <span class="c-comment">// Minimum objective NA</span>
+<span class="c-key">LaserΔP</span> <span class="c-val">&lt; 0.5%</span>   <span class="c-comment">// Max power drift</span>
+
+<span class="c-comment">// === 2025 UPGRADE ===</span>
+<span class="c-warn">// Consider fiber-coupled laser input</span>
+<span class="c-warn">// → eliminates pointing instability</span>
+<span class="c-warn">// → UncutGem project uses this approach</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MICROWAVE -->
+    <div id="panel-microwave" class="tab-panel">
+      <div class="hw-grid">
+        <ul class="component-list">
+          <li class="component-item">
+            <div class="component-bullet purple"></div>
+            <div>
+              <div class="component-name">Microwave Signal Generator</div>
+              <div class="component-desc">Must produce clean 2.87 GHz — the NV center zero-field splitting frequency. Frequency accuracy &lt;1 kHz drift is important. Commercial generators are preferred over SDR for stability.</div>
+              <span class="component-alt">Windfreak SynthHD Pro — $500, 54MHz–13.6GHz, USB-controlled; far cheaper than HP/Rohde &amp; Schwarz at &lt;1Hz resolution</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet purple"></div>
+            <div>
+              <div class="component-name">RF Switch (SPDT)</div>
+              <div class="component-desc">Chops continuous microwave tone into nanosecond pulses. Switching speed must be &lt;5ns. Essential for defining Pi and Pi/2 pulse durations precisely.</div>
+              <span class="component-alt">Mini-Circuits ZASWA-2-50DRA+ — 50Ω, &lt;3ns switching, well-documented in community builds</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet purple"></div>
+            <div>
+              <div class="component-name">RF Power Amplifier</div>
+              <div class="component-desc">Boosts microwave signal to ≥20 dBm at antenna. Gain stability matters — thermal drift in amplifiers causes Rabi frequency changes over time. Include RF shielding.</div>
+              <span class="component-alt">Mini-Circuits ZVE-3W-83+ — 2–8GHz, 33dBm output, affordable class for DIY; ZHL-16W-43-S+ for higher power</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet purple"></div>
+            <div>
+              <div class="component-name">Copper Loop Antenna (Custom)</div>
+              <div class="component-desc">25–50 micron wire loop, 1–3mm diameter, suspended 0.1–1mm above diamond surface. Delivers the oscillating magnetic field that flips the electron spin. Must be impedance-matched to 50Ω.</div>
+              <span class="component-alt">UncutGem open-source PCB integrates antenna geometry into KiCad design — eliminates freehand wire loop</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet purple"></div>
+            <div>
+              <div class="component-name">SMA Coaxial Cables &amp; Connectors</div>
+              <div class="component-desc">Phase-stable SMA cables rated to 18GHz+. Poor connectors cause signal reflections (VSWR) that distort pulse shapes and corrupt gate fidelity. Torque all SMA to spec (7 in-lb).</div>
+            </div>
+          </li>
+        </ul>
+        <div class="code-panel">
+<span class="c-head">// Microwave Subsystem — Quantum Gate Logic</span>
+<span class="c-comment">// === GATE MAPPING ===</span>
+<span class="c-key">f_NV</span>      <span class="c-val">= 2870 MHz</span>  <span class="c-comment">// zero-field</span>
+<span class="c-key">f_NV(B)</span>    <span class="c-val">= 2870 ± γB</span> <span class="c-comment">// with B-field</span>
+<span class="c-key">γ_e</span>       <span class="c-val">= 28 GHz/T</span>  <span class="c-comment">// gyromagnetic ratio</span>
+
+<span class="c-comment">// === PULSE TYPES ===</span>
+<span class="c-key">π pulse</span>   → <span class="c-val">NOT gate</span>   <span class="c-comment">// |0⟩ ↔ |1⟩</span>
+<span class="c-key">π/2 pulse</span> → <span class="c-val">Hadamard</span>  <span class="c-comment">// superposition</span>
+<span class="c-key">3π/2</span>      → <span class="c-val">Inv-H</span>     <span class="c-comment">// readout basis</span>
+
+<span class="c-comment">// === RABI FREQ ===</span>
+<span class="c-key">Ω_Rabi</span>   <span class="c-val">≈ 10–50 MHz</span>
+<span class="c-key">π_time</span>   <span class="c-val">≈ 10–50 ns</span>
+
+<span class="c-comment">// === RF PATH ===</span>
+<span class="c-str">Generator → Switch → Amp → Antenna</span>
+
+<span class="c-comment">// === 2025 UPGRADE ===</span>
+<span class="c-warn">// WindFreak SynthHD replaces lab-grade</span>
+<span class="c-warn">// generators at 1/10th the cost.</span>
+<span class="c-warn">// Python-controllable via USB.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROL -->
+    <div id="panel-control" class="tab-panel">
+      <div class="hw-grid">
+        <ul class="component-list">
+          <li class="component-item">
+            <div class="component-bullet green"></div>
+            <div>
+              <div class="component-name">Pulse Sequencer / FPGA Board</div>
+              <div class="component-desc">The real-time clock of your quantum computer. A standard OS (Windows/Linux) has millisecond jitter — far too slow for nanosecond gates. A dedicated FPGA runs deterministic timing with ~1ns resolution.</div>
+              <span class="component-alt">SpinCore PulseBlasterESR-PRO (classic) OR Qudi-compatible Sinara/ARTIQ FPGA — full open-source ecosystem; community-standard for NV labs</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet green"></div>
+            <div>
+              <div class="component-name">Data Acquisition Card (DAQ)</div>
+              <div class="component-desc">Reads TTL pulses from the APD photon counter and timestamps them with nanosecond resolution. Must support counter/timer mode, not just analog input. PCI or PCIe format preferred.</div>
+              <span class="component-alt">NI PCIe-6321 or NI USB-6341 — widely used in open-source Qudi software; NI-DAQmx driver has Python bindings</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet green"></div>
+            <div>
+              <div class="component-name">Control PC</div>
+              <div class="component-desc">Runs experiment orchestration software. Requires real PCIe slots (for DAQ/FPGA cards), USB 3.0, and reliable clock synchronization. Dedicated machine only — no background processes allowed during experiments.</div>
+              <span class="component-alt">Any modern desktop with PCIe ×4 slots; pair with Qudi (open-source Python framework from Ulm University)</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet green"></div>
+            <div>
+              <div class="component-name">Digital Oscilloscope (&gt;1GSa/s)</div>
+              <div class="component-desc">For debugging pulse shapes, timing jitter, and microwave envelope fidelity. Minimum 500MHz bandwidth. A bad pulse has a bad gate — you need to see it before you trust it.</div>
+              <span class="component-alt">Rigol DHO924S — 250MHz, 2GSa/s, ~$400; dramatically undercuts Tektronix/Keysight for DIY use</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet green"></div>
+            <div>
+              <div class="component-name">Control Software (Open Source)</div>
+              <div class="component-desc">Qudi (Ulm University) is the community-standard Python framework for NV center control experiments. Provides GUI, hardware abstraction, and experiment modules. Alternative: pylabmaster, qcodes.</div>
+              <span class="component-alt">GitHub: Ulm-IQO/qudi — Apache 2.0 license; active community; replaces all commercial LabVIEW-based alternatives</span>
+            </div>
+          </li>
+        </ul>
+        <div class="code-panel">
+<span class="c-head">// Pulse Sequence — Rabi Experiment</span>
+<span class="c-comment">// Run N=100,000× for statistics</span>
+
+<span class="c-key">for</span> tau <span class="c-val">in</span> np.linspace(0, 500e-9, 100):
+
+  <span class="c-comment">// 1. Initialize qubit to |0⟩</span>
+  <span class="c-key">laser_on</span>(duration=<span class="c-val">3e-6</span>)
+  wait(<span class="c-val">1e-6</span>)   <span class="c-comment">// let NV relax</span>
+
+  <span class="c-comment">// 2. Apply MW pulse</span>
+  <span class="c-key">mw_pulse</span>(freq=<span class="c-val">2.87e9</span>, tau=tau)
+
+  <span class="c-comment">// 3. Read photons = measure qubit</span>
+  <span class="c-key">laser_on</span>(duration=<span class="c-val">300e-9</span>)
+  counts = <span class="c-key">apd_read</span>(window=<span class="c-val">300e-9</span>)
+
+  <span class="c-comment">// 4. Normalize & plot</span>
+  signal[tau] = counts / ref_counts
+
+<span class="c-comment">// Expect sinusoidal oscillation</span>
+<span class="c-comment">// π-pulse at first minimum of signal</span>
+
+<span class="c-warn">// FPGA timing accuracy: &lt;1ns</span>
+<span class="c-warn">// OS cannot do this — use hardware</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAMOND -->
+    <div id="panel-diamond" class="tab-panel">
+      <div class="hw-grid">
+        <ul class="component-list">
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">CVD Diamond (Type IIa)</div>
+              <div class="component-desc">Chemical Vapor Deposition diamond with ultra-low nitrogen background (&lt;5 ppb). Natural diamond has too many unwanted nitrogen atoms causing decoherence. Electronic grade Type IIa is the standard substrate.</div>
+              <span class="component-alt">Element Six or Adamas Nanotechnologies — both supply electronic-grade CVD diamonds for research; 2×2×0.5mm chips, ~$200–500</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">NV Center Creation</div>
+              <div class="component-desc">NV centers are artificially created by nitrogen ion implantation followed by vacuum annealing at &gt;700°C. For a first build, purchase diamonds with pre-implanted NV centers from suppliers.</div>
+              <span class="component-alt">Adamas Nano sells diamonds with pre-created, specified NV-center densities — skips need for ion implanter entirely</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">13C-Enriched Diamond (Advanced)</div>
+              <div class="component-desc">Standard diamond has 1.1% carbon-13 (nuclear spin) which causes decoherence. Isotopically purified diamonds with &lt;0.01% 13C extend coherence times from microseconds to milliseconds.</div>
+              <span class="component-alt">Diatope (Germany) supplies isotope-enriched CVD diamonds — coherence time improvement of 100× over natural carbon isotope ratio</span>
+            </div>
+          </li>
+          <li class="component-item">
+            <div class="component-bullet"></div>
+            <div>
+              <div class="component-name">SnV Center Alternative (Emerging)</div>
+              <div class="component-desc">Tin-Vacancy (SnV) centers — a 2024 Fujitsu research highlight — offer 10× higher optical emission than NV centers. Less electric-field noise, better for photonic integration. Not yet DIY-accessible but worth watching.</div>
+            </div>
+          </li>
+        </ul>
+        <div class="code-panel">
+<span class="c-head">// Diamond Substrate — Key Parameters</span>
+<span class="c-comment">// === NV CENTER PHYSICS ===</span>
+<span class="c-key">spin</span>        <span class="c-val">= S=1 triplet</span>  <span class="c-comment">// 3-level spin</span>
+<span class="c-key">T1</span>          <span class="c-val">≈ 1–6ms</span>     <span class="c-comment">// spin-lattice relax</span>
+<span class="c-key">T2*</span>         <span class="c-val">≈ 1–10µs</span>    <span class="c-comment">// free induction decay</span>
+<span class="c-key">T2_echo</span>     <span class="c-val">≈ 0.1–2ms</span>   <span class="c-comment">// Hahn echo</span>
+
+<span class="c-comment">// === ISOTOPE EFFECT ===</span>
+<span class="c-key">natural_C13</span>    <span class="c-val">= 1.1%</span>   → T2 <span class="c-val">~µs</span>
+<span class="c-key">enriched_C12</span>   <span class="c-val">&lt;0.01%</span>  → T2 <span class="c-val">~ms</span>
+
+<span class="c-comment">// === DIAMOND SELECTION ===</span>
+<span class="c-key">type</span>        <span class="c-val">= "CVD IIa"</span>
+<span class="c-key">N_background</span> <span class="c-val">&lt; 5ppb</span>
+<span class="c-key">NV_density</span>  <span class="c-val">= 10¹²–10¹⁴ /cm³</span>
+
+<span class="c-warn">// 2025 NOTE: Adamas/Element Six pre-implanted</span>
+<span class="c-warn">// diamonds let you skip ion implantation.</span>
+<span class="c-warn">// Reduces setup barrier significantly.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-spacer"></div>
+
+  <!-- ENVIRONMENT -->
+  <section>
+    <div class="section-header">
+      <span class="section-num">03 // environment</span>
+      <div class="section-line"></div>
+    </div>
+    <h2>Physical Environment</h2>
+    <p class="section-desc">A standard desk, bedroom, or shared lab bench will not work. The environment must be engineered as carefully as the hardware.</p>
+
+    <div class="env-grid">
+      <div class="env-card">
+        <div class="env-card-title">🏗️ Vibration Isolation</div>
+        <ul class="env-list">
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>Heavy breadboard minimum:</strong> 300mm × 450mm × 12.5mm aluminum, M6 threaded, resting on 4× sorbothane pads. Footstep vibration will shift a laser spot by micrometers — enough to lose the NV entirely.</div></li>
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>Pneumatic table optional upgrade:</strong> Newport or TMC optical isolation tables cancel broadband vibration at 1–100Hz. Expensive but transformative for stability.</div></li>
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>3D-printed mounts viable:</strong> Stegemann et al. (2023, Eur. J. Phys.) demonstrated a full low-cost 3D-printed NV setup — total BOM under €5,000.</div></li>
+        </ul>
+      </div>
+      <div class="env-card">
+        <div class="env-card-title">🌑 Optical Darkness</div>
+        <ul class="env-list">
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>APD blind from ambient light:</strong> A power-strip LED or monitor glow will saturate your single-photon detector. You need complete blackout during measurements.</div></li>
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>Custom blackout enclosure:</strong> Build a plywood or aluminum box around the breadboard lined with blackout fabric. Velcro cable entry ports. Add interlocked door sensor to cut laser power if opened.</div></li>
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>No indicator LEDs:</strong> Remove or cover all LEDs on any instrument inside the enclosure. Power supply status lights are a common overlooked contamination source.</div></li>
+        </ul>
+      </div>
+      <div class="env-card">
+        <div class="env-card-title">🌡️ Thermal Stability</div>
+        <ul class="env-list">
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>Metal mounts drift with temperature:</strong> A 1°C change in a standard 50mm aluminum post causes ~1µm expansion — enough to defocus your laser spot.</div></li>
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>No HVAC vents directly blowing on setup.</strong> Even slight air currents cause drift. Consider a closed room with passive thermal stabilization.</div></li>
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>Invar or titanium mounts:</strong> For high-stability builds, use Invar-36 alloy mounts (CTE ≈ 1.2 ppm/°C vs 23 for aluminum). More expensive but worth it for 24/7 operation.</div></li>
+        </ul>
+      </div>
+      <div class="env-card">
+        <div class="env-card-title">🔒 RF Shielding</div>
+        <ul class="env-list">
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>Microwave leakage is real:</strong> Unshielded RF amplifiers at 3GHz will interfere with Wi-Fi, Bluetooth, medical devices, and neighboring electronics in a lab.</div></li>
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>Copper mesh Faraday cage</strong> around the microwave chain keeps emissions contained and protects the NV's spin from external RF noise.</div></li>
+          <li class="env-item"><div class="env-item-dot"></div><div><strong>Mu-metal magnetic shielding:</strong> External DC magnetic fields shift the NV resonance frequency. Mu-metal cylinders around the diamond region reduce environmental B-field noise by 1000×.</div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-spacer"></div>
+
+  <!-- SAFETY -->
+  <section>
+    <div class="section-header">
+      <span class="section-num">04 // safety</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="safety-banner">
+      <div class="safety-header">
+        <span class="safety-icon">⚠️</span>
+        <div>
+          <div class="safety-title">Critical Safety Hazards</div>
+          <div class="safety-subtitle">This is not a software project. Physical risks are real and permanent. Do not skip this section.</div>
+        </div>
+      </div>
+      <div class="safety-grid">
+        <div class="safety-item">
+          <div class="safety-item-title">🔴 Laser — Class 3B/4 Hazard</div>
+          <p>532nm green laser causes instant, irreversible retinal damage from direct or reflected beams. Back-reflections from optical surfaces are invisible until they hit your eye. OD5+ certified goggles specific to 532nm are mandatory at all times. Never look into an unshielded beam path. Use beam blocks and enclosed enclosure.</p>
+        </div>
+        <div class="safety-item">
+          <div class="safety-item-title">🟠 Microwave Radiation</div>
+          <p>Operating an unshielded antenna with an RF amplifier at 3GHz can cause localized tissue heating. At high power settings, this constitutes non-ionizing radiation exposure. Use minimum power needed for Rabi flipping, shield the amplifier output, and never operate with an open antenna next to body parts.</p>
+        </div>
+        <div class="safety-item">
+          <div class="safety-item-title">🟡 High Voltage Components</div>
+          <p>Avalanche Photodiodes (APDs) operate at reverse bias voltages of 200–400V. Some laser drivers have high-voltage stages. Never touch exposed high-voltage terminals. Ground all chassis. Use insulated test probes. Discharge capacitors before servicing.</p>
+        </div>
+        <div class="safety-item">
+          <div class="safety-item-title">🔵 Optical Component Cleaning</div>
+          <p>Contaminated objective lenses or diamond surfaces will destroy optical contrast. Do not touch optical surfaces bare-handed. Use first-contact polymer cleaner for objectives. Store the diamond in nitrogen or dry box when not in use. Surface contamination is not reversible for high-NA optics.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUILD ROADMAP -->
+  <section>
+    <div class="section-header">
+      <span class="section-num">05 // roadmap</span>
+      <div class="section-line"></div>
+    </div>
+    <h2>Recommended Build Sequence</h2>
+    <p class="section-desc">Do not build all systems in parallel. Each phase validates the previous. Skipping steps creates impossible-to-debug compound failures.</p>
+
+    <div class="roadmap">
+      <div class="roadmap-step">
+        <div class="step-dot">01</div>
+        <div class="step-content">
+          <div class="step-title">Simulate first — use NVIDIA CUDA-Q Dynamics</div>
+          <div class="step-desc">Before spending money on hardware, model your pulse sequences using CUDA-Q Dynamics (free, Python). Validate your understanding of Rabi oscillations, T2 decay, and ODMR spectra in simulation. This reveals design errors before they become expensive hardware problems.</div>
+          <span class="step-time">Week 1–2</span>
+        </div>
+      </div>
+      <div class="roadmap-step">
+        <div class="step-dot">02</div>
+        <div class="step-content">
+          <div class="step-title">Study UncutGem open-source reference design</div>
+          <div class="step-desc">The QuantumVillage UncutGem project (github.com/QuantumVillage/UncutGem) provides fully open KiCad PCB schematics, firmware, and a bill of materials for a working NV center magnetometer. Use this as your hardware reference before designing anything custom.</div>
+          <span class="step-time">Week 2–3</span>
+        </div>
+      </div>
+      <div class="roadmap-step">
+        <div class="step-dot">03</div>
+        <div class="step-content">
+          <div class="step-title">Build optical path first — verify ODMR before microwaves</div>
+          <div class="step-desc">Set up the confocal microscope, verify you can see NV fluorescence under green laser illumination, and collect a photoluminescence map of the diamond surface. Confirm photon counts are stable. Only then proceed to add microwave hardware.</div>
+          <span class="step-time">Month 1–2</span>
+        </div>
+      </div>
+      <div class="roadmap-step">
+        <div class="step-dot">04</div>
+        <div class="step-content">
+          <div class="step-title">Measure ODMR spectrum — confirm qubit resonance</div>
+          <div class="step-desc">Apply a weak, swept microwave tone while monitoring APD counts. You should observe a dip in fluorescence at 2.87 GHz — this is the electron spin resonance (ESR) signature confirming your NV center is functioning as a qubit. Apply an external DC magnetic field to split the two dips (ms = ±1).</div>
+          <span class="step-time">Month 2–3</span>
+        </div>
+      </div>
+      <div class="roadmap-step">
+        <div class="step-dot">05</div>
+        <div class="step-content">
+          <div class="step-title">Demonstrate Rabi oscillations — first quantum gate</div>
+          <div class="step-desc">Apply pulsed microwave bursts of increasing duration and measure photon counts after each. A sinusoidal oscillation (Rabi flop) confirms coherent spin control. The first minimum is your π-pulse — your first quantum NOT gate. This is the foundational milestone.</div>
+          <span class="step-time">Month 3–4</span>
+        </div>
+      </div>
+      <div class="roadmap-step">
+        <div class="step-dot">06</div>
+        <div class="step-content">
+          <div class="step-title">Measure T2 coherence — optimize environment</div>
+          <div class="step-desc">Run a Hahn echo experiment to measure T2 spin coherence time. This directly measures how long your qubit retains quantum information. Improvements here come from: better vibration isolation, lower background nitrogen in diamond, isotopically pure carbon, and reduced magnetic noise.</div>
+          <span class="step-time">Month 4–6</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Educational reference based on open-source quantum computing research. Key sources: <a href="https://quantumvillage.org" target="_blank">QuantumVillage UncutGem</a> · <a href="https://github.com/Ulm-IQO/qudi" target="_blank">Qudi Framework</a> · Stegemann et al. 2023 (Eur. J. Phys.) · Open Quantum Design (OQD, 2024)</p>
+    <p style="margin-top:8px; color: #3a4d6e;">Updated March 2025 — incorporating latest DIY NV community advances</p>
+  </footer>
+
+</div>
+
+<script>
+  // Radar chart
+  document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('skillsRadar').getContext('2d');
+    new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['Quantum Physics', 'Optical Alignment', 'RF Engineering', 'Python / FPGA', 'Data Analysis', 'PCB Fab'],
+        datasets: [{
+          label: 'Required Level',
+          data: [8, 9, 7, 8, 6, 6.5],
+          backgroundColor: 'rgba(0,229,255,0.08)',
+          borderColor: 'rgba(0,229,255,0.7)',
+          pointBackgroundColor: 'rgba(0,229,255,1)',
+          pointBorderColor: '#080c14',
+          pointHoverBackgroundColor: '#fff',
+          borderWidth: 2,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            min: 0, max: 10,
+            angleLines: { color: 'rgba(255,255,255,0.06)' },
+            grid: { color: 'rgba(255,255,255,0.06)' },
+            pointLabels: {
+              font: { family: 'Outfit', size: 11, weight: '500' },
+              color: '#667399'
+            },
+            ticks: { display: false, stepSize: 2 }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0d1421',
+            borderColor: '#1e2d47',
+            borderWidth: 1,
+            titleColor: '#00e5ff',
+            bodyColor: '#e8edf5',
+            callbacks: {
+              label: ctx => `Required: ${ctx.raw} / 10`
+            }
+          }
+        }
+      }
+    });
+  });
+
+  // Tab switcher
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>
