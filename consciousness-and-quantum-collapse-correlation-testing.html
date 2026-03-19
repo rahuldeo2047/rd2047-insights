@@ -1225,8 +1225,10 @@ async function runExperiment() {
   if (roundLoopRunning) return;
   roundLoopRunning = true;
   S.round = 0;
-  S.experimentMode = currentMode;
-  const mode = S.experimentMode;
+  S.experimentMode = currentMode;   // always re-read live value
+  const mode = currentMode;
+  document.getElementById('testIdLine').textContent =
+    'TEST: ' + S.testId + '  ·  MODE: ' + mode;
 
   while (S.round < TOT && S.phase !== 'done') {
 
@@ -1639,8 +1641,9 @@ async function refreshArchive() {
     div.className = 'hitem';
     const date = new Date(s.endedAt||s.startedAt).toLocaleString();
     const ac = s.antiPct >= 60 ? 'r' : s.antiPct <= 40 ? 'g' : 'a';
-    const mbars = (s.log||[]).map(e=>`<div class="mb ${e.type}"></div>`).join('');
-    div.innerHTML = `
+    const rounds = Array.isArray(s.rounds) ? s.rounds : [];
+    const mbars = rounds.map(e=>`<div class="mb ${e.outcome||'skip'}"></div>`).join('');
+     div.innerHTML = `
       <div class="h-top">
         <div>
           <div class="h-id">${s.testId}</div>
