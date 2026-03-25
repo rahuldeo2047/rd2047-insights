@@ -209,7 +209,7 @@
     <div style="margin-bottom:14px;">
       <h2 class="section-title">
         <i data-lucide="rss" style="width:18px;height:18px;color:var(--accent);"></i>
-        Live News <span class="section-badge">AUTO-REFRESH 30m</span>
+        Energy &amp; Crisis Watch <span class="section-badge">RELEVANCE RANKED · 30m</span>
       </h2>
     </div>
     <div id="news-status" class="news-status">
@@ -217,15 +217,15 @@
       <span id="news-status-text">Loading feeds…</span>
     </div>
     <div class="news-tabs">
-      <button class="news-tab-btn active" onclick="switchNewsFeed('global')">🌐 Global</button>
+      <button class="news-tab-btn active" onclick="switchNewsFeed('energy')">⚡ Energy Crisis</button>
       <button class="news-tab-btn" onclick="switchNewsFeed('india')">🇮🇳 India</button>
-      <button class="news-tab-btn" onclick="switchNewsFeed('tech')">⚡ Tech &amp; Science</button>
-      <button class="news-tab-btn" onclick="switchNewsFeed('disaster')">⚠️ Alerts</button>
+      <button class="news-tab-btn" onclick="switchNewsFeed('crisis')">⚠️ Disasters</button>
+      <button class="news-tab-btn" onclick="switchNewsFeed('supply')">📦 Supply Chain</button>
     </div>
-    <div id="news-feed-global" class="news-feed active" data-feed="global"></div>
+    <div id="news-feed-energy" class="news-feed active" data-feed="energy"></div>
     <div id="news-feed-india" class="news-feed" data-feed="india"></div>
-    <div id="news-feed-tech" class="news-feed" data-feed="tech"></div>
-    <div id="news-feed-disaster" class="news-feed" data-feed="disaster"></div>
+    <div id="news-feed-crisis" class="news-feed" data-feed="crisis"></div>
+    <div id="news-feed-supply" class="news-feed" data-feed="supply"></div>
   </div>
 
 </section>
@@ -577,170 +577,353 @@ function saveContacts() {
 // ══════════════════════════════════════════════════════════════════
 // NEWS ENGINE
 // ══════════════════════════════════════════════════════════════════
-const NEWS_CACHE_KEY = 'druva_news_v1';
-const NEWS_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
-const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+// ══════════════════════════════════════════════════════════════════
+// NEWS ENGINE v2 — Multi-proxy fallback + native XML parsing
+// Works on GitHub Pages (static) — no server required
+// ══════════════════════════════════════════════════════════════════
 
-const FEEDS = {
-  global: [
-    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml',         label: 'BBC World' },
-    { url: 'https://rss.reuters.com/reuters/worldnews',            label: 'Reuters' },
-    { url: 'https://www.aljazeera.com/xml/rss/all.xml',            label: 'Al Jazeera' },
+const NEWS_CACHE_KEY   = 'druva_news_v2';
+const NEWS_INTERVAL_MS = 30 * 60 * 1000;
+let newsCache  = {};
+let newsTimer  = null;
+let currentFeedKey = 'india';
+
+// ── Feed definitions ─────────────────────────────────────────────
+// Using plain RSS URLs — fetched through CORS proxies
+const FEED_DEFS = {
+  // ⚡ ENERGY CRISIS — dedicated energy/fuel/grid/oil sources
+  energy: [
+    { url: 'https://oilprice.com/rss/main',                                                    label: 'OilPrice.com' },
+    { url: 'https://www.eia.gov/rss/news.xml',                                                 label: 'US EIA (Energy)' },
+    { url: 'https://www.iea.org/feed/news',                                                    label: 'IEA Global' },
+    { url: 'https://www.energymonitor.ai/feed/',                                               label: 'Energy Monitor' },
+    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',                                  label: 'BBC Business' },
+    { url: 'https://www.thehindu.com/business/Economy/feeder/default.rss',                    label: 'The Hindu Economy' },
+  ],
+  // 🇮🇳 INDIA CRISIS — India-specific energy, fuel, grid, shortage news
+  india: [
+    { url: 'https://feeds.feedburner.com/ndtvnews-india-news',                                 label: 'NDTV India' },
+    { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',                       label: 'Times of India' },
+    { url: 'https://www.thehindu.com/feeder/default.rss',                                      label: 'The Hindu' },
+    { url: 'https://feeds.bbci.co.uk/news/world/south_asia/rss.xml',                          label: 'BBC South Asia' },
+    { url: 'https://pib.gov.in/RssMain.aspx',                                                  label: 'Govt of India PIB' },
+  ],
+  // ⚠️ DISASTERS & LOCKDOWNS — global emergency, conflict, civil disruption
+  crisis: [
+    { url: 'https://www.gdacs.org/xml/rss.xml',                                                label: 'GDACS Disasters' },
+    { url: 'https://reliefweb.int/updates/rss.xml',                                            label: 'ReliefWeb' },
+    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml',                                     label: 'BBC World' },
+    { url: 'https://rss.reuters.com/reuters/worldnews',                                        label: 'Reuters World' },
+    { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml',                   label: 'BBC Environment' },
+  ],
+  // 📦 FOOD & SUPPLY CHAIN — grain, fuel prices, inflation, shortages
+  supply: [
+    { url: 'https://www.fao.org/news/rss-feed/rss-food-ag-news/en/',                          label: 'FAO Food & Ag' },
+    { url: 'https://feeds.bbci.co.uk/news/business/economy/rss.xml',                          label: 'BBC Economy' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml',                        label: 'NYT Economy' },
+    { url: 'https://feeds.feedburner.com/ndtvnews-top-stories',                               label: 'NDTV Top Stories' },
+    { url: 'https://www.thehindu.com/business/agri-business/feeder/default.rss',              label: 'The Hindu Agri' },
+  ],
+}
+
+// ── Keyword filters per feed — articles matching these score higher ──
+const FEED_KEYWORDS = {
+  energy: [
+    'energy','fuel','oil','gas','petrol','diesel','electricity','power cut','lpg',
+    'coal','solar','grid','blackout','power outage','shortage','opec','crude','barrel',
+    'energy crisis','fuel crisis','power crisis','load shedding','rationing','refinery',
+    'natural gas','pipeline','sanctions','energy price','electricity price','power plant',
+    'energy security','energy supply','fuel shortage','gas price','oil price','power grid'
   ],
   india: [
-    { url: 'https://feeds.feedburner.com/ndtvnews-india-news',     label: 'NDTV India' },
-    { url: 'https://www.thehindu.com/news/national/feeder/default.rss', label: 'The Hindu' },
-    { url: 'https://feeds.bbci.co.uk/news/world/south_asia/rss.xml', label: 'BBC South Asia' },
+    'india','indian','delhi','mumbai','bangalore','bengaluru','government','ministry',
+    'rupee','lockdown','emergency','disaster','flood','cyclone','shortage','supply',
+    'ration','inflation','petrol price','diesel price','lpg price','power cut',
+    'fuel price','electricity bill','load shedding','coal shortage','natural disaster',
+    'drought','famine','epidemic','outbreak','curfew','state of emergency',
+    'essential goods','food shortage','water crisis','blackout','food inflation'
   ],
-  tech: [
-    { url: 'https://feeds.feedburner.com/TechCrunch',              label: 'TechCrunch' },
-    { url: 'https://www.wired.com/feed/rss',                       label: 'Wired' },
-    { url: 'https://rss.slashdot.org/Slashdot/slashdotScience',    label: 'Science' },
+  crisis: [
+    'crisis','emergency','disaster','war','conflict','lockdown','civil unrest',
+    'flood','earthquake','tsunami','cyclone','hurricane','famine','food crisis',
+    'shortage','collapse','blackout','evacuation','alert','warning','humanitarian',
+    'displacement','refugee','siege','invasion','sanctions','supply disruption',
+    'energy crisis','fuel crisis','infrastructure collapse','grid failure',
+    'state of emergency','martial law','curfew','civil emergency'
   ],
-  disaster: [
-    { url: 'https://www.gdacs.org/xml/rss.xml',                    label: 'GDACS Alerts' },
-    { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', label: 'BBC Climate' },
-    { url: 'https://feeds.feedburner.com/ndtvnews-latest',         label: 'NDTV Latest' },
+  supply: [
+    'supply','shortage','inflation','food price','wheat','rice','grain','commodity',
+    'import','export','trade','stockpile','reserve','ration','logistics','supply chain',
+    'food security','food shortage','crop failure','harvest','drought','commodity price',
+    'fertiliser','fertilizer','food inflation','price hike','price rise','cost of living',
+    'grocery','essential goods','distribution','hoarding','panic buying','depleted'
   ],
-};
+}
 
-let newsCache = {};
-let newsTimer = null;
-let currentFeed = 'global';
+// ── CORS proxy chain — tried in order until one works ────────────
+const PROXIES = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=10`,
+  url => `https://thingproxy.freeboard.io/fetch/${url}`,
+];
 
-function loadNewsCache() {
+// ── Fetch a single RSS feed through proxies ──────────────────────
+async function fetchRSS(feedDef) {
+  for (let i = 0; i < PROXIES.length; i++) {
+    const proxyUrl = PROXIES[i](feedDef.url);
+    try {
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(7000) });
+      if (!res.ok) continue;
+      const text = await res.text();
+
+      // rss2json returns JSON — handle separately
+      if (proxyUrl.includes('rss2json')) {
+        const data = JSON.parse(text);
+        if (data.status === 'ok' && data.items && data.items.length > 0) {
+          return data.items.slice(0, 8).map(item => ({
+            title:   cleanText(item.title || ''),
+            link:    item.link || '#',
+            pubDate: item.pubDate || '',
+            source:  feedDef.label,
+          }));
+        }
+        continue;
+      }
+
+      // Raw RSS/XML — parse with DOMParser
+      if (!text || text.trim().length < 50) continue;
+      const items = parseRSSXML(text, feedDef.label);
+      if (items.length > 0) return items;
+
+    } catch(e) {
+      // This proxy failed, try next
+      continue;
+    }
+  }
+  return []; // all proxies failed for this feed
+}
+
+// ── Parse RSS XML natively (DOMParser) ───────────────────────────
+function parseRSSXML(xmlText, sourceLabel) {
   try {
-    const raw = localStorage.getItem(NEWS_CACHE_KEY);
-    if (raw) newsCache = JSON.parse(raw);
-  } catch(e) {}
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlText, 'application/xml');
+    const parseErr = doc.querySelector('parsererror');
+    if (parseErr) {
+      // Try as text/html fallback
+      const doc2 = parser.parseFromString(xmlText, 'text/html');
+      const items2 = doc2.querySelectorAll('item');
+      if (!items2.length) return [];
+      return Array.from(items2).slice(0, 8).map(el => ({
+        title:   cleanText(getTagText(el, 'title')),
+        link:    getTagText(el, 'link') || getTagAttr(el, 'link', 'href') || '#',
+        pubDate: getTagText(el, 'pubDate') || getTagText(el, 'updated') || '',
+        source:  sourceLabel,
+      })).filter(i => i.title.length > 5);
+    }
+
+    const items = doc.querySelectorAll('item, entry');
+    return Array.from(items).slice(0, 8).map(el => ({
+      title:   cleanText(getTagText(el, 'title')),
+      link:    getTagText(el, 'link') || getTagAttr(el, 'link', 'href') || '#',
+      pubDate: getTagText(el, 'pubDate') || getTagText(el, 'updated') || '',
+      source:  sourceLabel,
+    })).filter(i => i.title.length > 5);
+  } catch(e) {
+    return [];
+  }
 }
 
-function saveNewsCache() {
-  try { localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(newsCache)); } catch(e) {}
+function getTagText(el, tag) {
+  const node = el.querySelector(tag);
+  return node ? (node.textContent || '').trim() : '';
+}
+function getTagAttr(el, tag, attr) {
+  const node = el.querySelector(tag);
+  return node ? (node.getAttribute(attr) || '') : '';
+}
+function cleanText(str) {
+  return str.replace(/<[^>]+>/g, '').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ').trim();
 }
 
+// ── Time formatting ───────────────────────────────────────────────
 function timeAgo(dateStr) {
+  if (!dateStr) return '';
   const d = new Date(dateStr);
-  if (isNaN(d)) return '';
+  if (isNaN(d.getTime())) return '';
   const diff = Math.floor((Date.now() - d) / 1000);
+  if (diff < 0) return 'just now';
   if (diff < 60) return 'just now';
   if (diff < 3600) return Math.floor(diff/60) + 'm ago';
   if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
   return Math.floor(diff/86400) + 'd ago';
 }
 
-function showSkeletons(feedId, count=5) {
-  const el = document.getElementById('news-feed-' + feedId);
+// ── Skeleton loader ───────────────────────────────────────────────
+function showSkeletons(feedKey, count=5) {
+  const el = document.getElementById('news-feed-' + feedKey);
   if (!el) return;
-  el.innerHTML = Array(count).fill(0).map(()=>`
+  el.innerHTML = Array(count).fill(0).map(() => `
     <div class="news-skeleton">
-      <div class="skeleton-line" style="width:60px;height:8px;"></div>
-      <div class="skeleton-line" style="width:90%;margin-top:6px;height:12px;"></div>
-      <div class="skeleton-line" style="width:70%;height:12px;"></div>
-      <div class="skeleton-line" style="width:40px;height:8px;margin-top:2px;"></div>
+      <div class="skeleton-line" style="width:70px;height:7px;"></div>
+      <div class="skeleton-line" style="width:92%;margin-top:7px;height:13px;"></div>
+      <div class="skeleton-line" style="width:68%;height:13px;"></div>
+      <div class="skeleton-line" style="width:45px;height:7px;margin-top:3px;"></div>
     </div>`).join('');
 }
 
-function renderNewsItems(feedId, items) {
-  const el = document.getElementById('news-feed-' + feedId);
+// ── Render articles ───────────────────────────────────────────────
+function renderNewsItems(feedKey, items) {
+  const el = document.getElementById('news-feed-' + feedKey);
   if (!el) return;
   if (!items || items.length === 0) {
-    el.innerHTML = `<div style="font-size:0.75rem;color:var(--text-3);padding:16px;text-align:center;">No articles loaded. Check connection and try again.</div>`;
+    el.innerHTML = `
+      <div style="padding:20px;text-align:center;color:var(--text-3);font-size:0.75rem;">
+        <div style="font-size:1.5rem;margin-bottom:8px;">📡</div>
+        <div>Could not load articles.</div>
+        <div style="margin-top:4px;font-size:0.65rem;">Feeds will retry automatically in 30 minutes.</div>
+        <button onclick="manualRefresh()" style="margin-top:12px;background:var(--accent-glow);border:1px solid var(--accent-dim);color:var(--accent);font-family:'Rajdhani',sans-serif;font-weight:600;font-size:0.75rem;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:0.06em;">↻ Retry Now</button>
+      </div>`;
     return;
   }
-  el.innerHTML = items.slice(0, 12).map(item => `
-    <a class="news-item" href="${item.link || '#'}" target="_blank" rel="noopener">
-      <span class="news-item-source">${item.source || ''}</span>
-      <span class="news-item-title">${item.title || 'Untitled'}</span>
-      <span class="news-item-time">${timeAgo(item.pubDate)}</span>
-    </a>`).join('');
+  el.innerHTML = items.slice(0, 14).map(item => {
+    const score = item.score || 0;
+    const hot = score >= 2;
+    const rel = score >= 1 && !hot;
+    const badge = hot
+      ? '<span style="font-size:0.54rem;background:rgba(248,113,113,0.15);color:var(--red);border:1px solid rgba(248,113,113,0.4);border-radius:2px;padding:1px 6px;letter-spacing:0.08em;flex-shrink:0;">HIGH RELEVANCE</span>'
+      : rel
+      ? '<span style="font-size:0.54rem;background:var(--accent-glow);color:var(--accent);border:1px solid var(--accent-dim);border-radius:2px;padding:1px 6px;letter-spacing:0.08em;flex-shrink:0;">RELEVANT</span>'
+      : '';
+    const bl = hot ? 'border-left:3px solid var(--red);padding-left:13px;'
+             : rel  ? 'border-left:3px solid var(--accent-dim);padding-left:13px;'
+             : '';
+    return '<a class="news-item" href="' + (item.link||'#') + '" target="_blank" rel="noopener noreferrer" style="' + bl + '">'
+      + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">'
+      + '<span class="news-item-source">' + (item.source||'') + '</span>' + badge
+      + '</div>'
+      + '<span class="news-item-title">' + (item.title||'Untitled') + '</span>'
+      + '<span class="news-item-time">' + timeAgo(item.pubDate) + '</span>'
+      + '</a>';
+  }).join('');
 }
 
-async function fetchFeed(feedDef) {
-  const apiUrl = RSS2JSON + encodeURIComponent(feedDef.url) + '&count=8';
-  const res = await fetch(apiUrl, { signal: AbortSignal.timeout(8000) });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const data = await res.json();
-  if (data.status !== 'ok') throw new Error('Feed error');
-  return (data.items || []).map(item => ({
-    title:   item.title,
-    link:    item.link,
-    pubDate: item.pubDate,
-    source:  feedDef.label,
-  }));
-}
-
-async function fetchAllFeeds(feedKey) {
-  const defs = FEEDS[feedKey] || [];
-  const results = await Promise.allSettled(defs.map(d => fetchFeed(d)));
+// ── Fetch & render one category ───────────────────────────────────
+async function loadFeedCategory(key) {
+  const defs = FEED_DEFS[key] || [];
+  const results = await Promise.allSettled(defs.map(d => fetchRSS(d)));
   let items = [];
   results.forEach(r => { if (r.status === 'fulfilled') items = items.concat(r.value); });
-  // Sort by date newest first
-  items.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+  // ── Keyword relevance scoring ──────────────────────────────────
+  const keywords = FEED_KEYWORDS[key] || [];
+  items = items.map(item => {
+    const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
+    let score = 0;
+    keywords.forEach(kw => { if (text.includes(kw)) score++; });
+    return { ...item, score };
+  });
+
+  // Sort: keyword-matched articles first, then by date within each tier
+  items.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return new Date(b.pubDate) - new Date(a.pubDate);
+  });
+
+  // De-duplicate by title similarity
+  const seen = new Set();
+  items = items.filter(item => {
+    const key = (item.title || '').slice(0, 60).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   return items;
 }
 
-async function refreshAllNews(showSkeleton=true) {
+// ── Full refresh of all 4 categories ─────────────────────────────
+async function refreshAllNews(showSkel = true) {
   const dot = document.getElementById('news-dot');
-  const statusText = document.getElementById('news-status-text');
+  const statusEl = document.getElementById('news-status-text');
   if (dot) dot.style.background = 'var(--yellow)';
-  if (statusText) statusText.textContent = 'Refreshing feeds…';
+  if (statusEl) statusEl.textContent = 'Fetching feeds…';
 
-  const keys = Object.keys(FEEDS);
-  if (showSkeleton) keys.forEach(k => showSkeletons(k));
+  const keys = Object.keys(FEED_DEFS);
+  if (showSkel) keys.forEach(k => showSkeletons(k));
 
-  const now = Date.now();
-  for (const key of keys) {
-    try {
-      const items = await fetchAllFeeds(key);
-      if (items.length > 0) {
-        newsCache[key] = { items, ts: now };
-      }
-      renderNewsItems(key, newsCache[key]?.items || []);
-    } catch(e) {
-      // Use cached if available
-      if (newsCache[key]?.items) renderNewsItems(key, newsCache[key].items);
-      else renderNewsItems(key, []);
+  let anyLoaded = false;
+  const fetchPromises = keys.map(async key => {
+    const items = await loadFeedCategory(key);
+    if (items.length > 0) {
+      newsCache[key] = { items, ts: Date.now() };
+      anyLoaded = true;
     }
-  }
+    renderNewsItems(key, newsCache[key]?.items || []);
+  });
 
+  await Promise.allSettled(fetchPromises);
   saveNewsCache();
-  const fetchedAt = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
-  if (dot) dot.style.background = 'var(--green)';
-  if (statusText) statusText.textContent = 'Updated ' + fetchedAt + ' · next refresh in 30m';
+
+  const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  if (dot) dot.style.background = anyLoaded ? 'var(--green)' : 'var(--red)';
+  if (statusEl) statusEl.textContent = anyLoaded
+    ? `Updated ${now} · next refresh in 30m`
+    : `Last attempt ${now} · retrying in 30m`;
 }
 
+function manualRefresh() {
+  refreshAllNews(true);
+}
+
+// ── Tab switching ─────────────────────────────────────────────────
 function switchNewsFeed(key) {
-  currentFeed = key;
+  currentFeedKey = key;
   document.querySelectorAll('.news-tab-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  if (event && event.target) event.target.classList.add('active');
   document.querySelectorAll('.news-feed').forEach(f => f.classList.remove('active'));
   const el = document.getElementById('news-feed-' + key);
   if (el) el.classList.add('active');
 }
 
+// ── localStorage cache ────────────────────────────────────────────
+function loadNewsCache() {
+  try { const r = localStorage.getItem(NEWS_CACHE_KEY); if (r) newsCache = JSON.parse(r); } catch(e) {}
+}
+function saveNewsCache() {
+  try { localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(newsCache)); } catch(e) {}
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
 function startNewsEngine() {
   loadNewsCache();
-  // Show cached immediately if available
-  const keys = Object.keys(FEEDS);
-  let hasCached = false;
+  const keys = Object.keys(FEED_DEFS);
+
+  // Show cached data immediately if available
+  let hasFresh = false;
   keys.forEach(key => {
     if (newsCache[key]?.items?.length > 0) {
       renderNewsItems(key, newsCache[key].items);
-      hasCached = true;
+      const age = Date.now() - (newsCache[key].ts || 0);
+      if (age < NEWS_INTERVAL_MS) hasFresh = true;
     }
   });
-  // Check if cache is stale (> 30m old)
+
   const oldestTs = Math.min(...keys.map(k => newsCache[k]?.ts || 0));
   const stale = (Date.now() - oldestTs) > NEWS_INTERVAL_MS;
-  if (!hasCached || stale) {
-    refreshAllNews(!hasCached); // skeleton only if no cache
+
+  if (!hasFresh || stale) {
+    // Small delay so page renders first
+    setTimeout(() => refreshAllNews(!hasFresh), 800);
   } else {
-    const fetchedAt = new Date(oldestTs).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
-    const statusText = document.getElementById('news-status-text');
-    if (statusText) statusText.textContent = 'Cached from ' + fetchedAt + ' · refreshing soon';
+    const t = new Date(oldestTs).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const statusEl = document.getElementById('news-status-text');
+    const dot = document.getElementById('news-dot');
+    if (statusEl) statusEl.textContent = `Cached from ${t} · refreshing at 30m intervals`;
+    if (dot) dot.style.background = 'var(--green)';
   }
-  // Schedule every 30m
+
   if (newsTimer) clearInterval(newsTimer);
   newsTimer = setInterval(() => refreshAllNews(false), NEWS_INTERVAL_MS);
 }
