@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Run AI Without the Cloud | Edge LLM Build Log | RD2047 Insights</title>
+<meta name="description" content="Engineering diary: RPi5 + Hailo-10H NPU, 15 benchmark iterations, 5 edge LLMs, 100% format accuracy achieved. From bare hardware to production fallback pipeline.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());gtag('config','G-8Y8EYHB278',{anonymize_ip:true});
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('a[href]').forEach(function(l){
+    l.addEventListener('click',function(){
+      var d=l.getAttribute('href')||'unknown';
+      var lb=l.querySelector('h3')?l.querySelector('h3').innerText.trim().slice(0,80):(l.innerText.trim().slice(0,80)||d);
+      gtag('event','link_click',{event_category:'edge_ai_journey',event_label:lb,link_destination:d,page_path:window.location.pathname});
+    });
+  });
+});
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,300;0,700;1,300&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf8f5;--tx:#2d3748;--teal:#0d9488;--amb:#d97706;
+  --dk:#080c14;--md:#0f1824;--term:#0d1117;
+  --cy:#00e5ff;--gn:#3fb950;--rd:#f85149;--bl:#58a6ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+/* ── NAV ── */
+.top-nav{position:fixed;top:0;left:0;right:0;z-index:200;
+  background:rgba(8,12,20,0.96);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(0,229,255,0.09);
+  padding:.65rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.tn-back{font-family:'Space Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.4);
+  text-decoration:none;display:flex;align-items:center;gap:.5rem;transition:color .2s;}
+.tn-back:hover{color:var(--cy);}
+.tn-crumb{font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.22);letter-spacing:.05em;}
+.tn-crumb em{color:var(--cy);font-style:normal;}
+
+/* ── HERO ── */
+.hero{min-height:100vh;background:var(--dk);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:7rem 1.5rem 5rem;position:relative;overflow:hidden;}
+.hg{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,229,255,.032) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.032) 1px,transparent 1px);
+  background-size:54px 54px;}
+@keyframes sweep{0%{transform:translateY(-100%);}100%{transform:translateY(110vh);}}
+.hsw{position:absolute;left:0;right:0;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.28),transparent);
+  animation:sweep 9s linear infinite;}
+.brkt{position:absolute;width:36px;height:36px;border-color:rgba(0,229,255,.2);border-style:solid;}
+.tl{top:5.5rem;left:1.8rem;border-width:2px 0 0 2px;}
+.tr{top:5.5rem;right:1.8rem;border-width:2px 2px 0 0;}
+.bl{bottom:2.5rem;left:1.8rem;border-width:0 0 2px 2px;}
+.br{bottom:2.5rem;right:1.8rem;border-width:0 2px 2px 0;}
+
+.h-eye{font-family:'Space Mono',monospace;font-size:.67rem;color:var(--cy);
+  letter-spacing:.24em;text-transform:uppercase;margin-bottom:1.4rem;
+  opacity:0;animation:fup .5s .2s forwards;}
+.hero h1{font-family:'Merriweather',serif;font-size:clamp(1.9rem,5vw,3.5rem);
+  font-weight:700;color:#fff;line-height:1.1;max-width:800px;
+  opacity:0;animation:fup .6s .4s forwards;}
+.hero h1 em{font-style:normal;color:var(--cy);}
+.h-sub{margin-top:1.4rem;font-size:.97rem;color:rgba(255,255,255,.43);
+  max-width:580px;line-height:1.8;opacity:0;animation:fup .6s .65s forwards;}
+.h-stats{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center;
+  margin-top:2.8rem;opacity:0;animation:fup .6s .9s forwards;}
+.hs{border:1px solid rgba(0,229,255,.11);background:rgba(0,229,255,.04);
+  padding:.85rem 1.3rem;border-radius:4px;text-align:center;min-width:100px;}
+.hs-n{font-family:'Space Mono',monospace;font-size:1.45rem;font-weight:700;
+  color:var(--cy);line-height:1;}
+.hs-l{font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  color:rgba(255,255,255,.28);letter-spacing:.1em;text-transform:uppercase;margin-top:.28rem;}
+.scroll-hint{position:absolute;bottom:1.8rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  color:rgba(255,255,255,.18);font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  letter-spacing:.15em;animation:breathe 2.6s ease-in-out infinite;}
+.scroll-hint::before{content:'';display:block;width:1px;height:32px;
+  background:linear-gradient(to bottom,var(--cy),transparent);}
+@keyframes breathe{0%,100%{opacity:.25;}50%{opacity:.75;}}
+@keyframes fup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── SECTIONS ── */
+.s-dk{background:var(--dk);color:#e2e8f0;}
+.s-md{background:var(--md);color:#e2e8f0;}
+.s-wm{background:var(--bg);color:var(--tx);}
+.s-of{background:#f0ede8;color:var(--tx);}
+section{padding:4.5rem 1.5rem;}
+.bd-dw{height:55px;background:linear-gradient(to bottom,var(--dk),var(--bg));}
+.bd-wd{height:55px;background:linear-gradient(to bottom,var(--bg),var(--dk));}
+.bd-dm{height:35px;background:linear-gradient(to bottom,var(--dk),var(--md));}
+.bd-md{height:35px;background:linear-gradient(to bottom,var(--md),var(--dk));}
+.bd-mw{height:55px;background:linear-gradient(to bottom,var(--md),var(--bg));}
+.bd-wm{height:55px;background:linear-gradient(to bottom,var(--bg),var(--md));}
+.bd-wo{height:35px;background:linear-gradient(to bottom,var(--bg),#f0ede8);}
+.bd-ow{height:35px;background:linear-gradient(to bottom,#f0ede8,var(--bg));}
+.inn{max-width:840px;margin:0 auto;}
+.inn-w{max-width:1040px;margin:0 auto;}
+
+.eye{font-family:'Space Mono',monospace;font-size:.66rem;
+  letter-spacing:.22em;text-transform:uppercase;margin-bottom:.65rem;}
+.eye-c{color:var(--cy);}.eye-t{color:var(--teal);}.eye-a{color:var(--amb);}
+h2.act{font-family:'Merriweather',serif;font-size:clamp(1.45rem,3vw,2.15rem);
+  font-weight:700;line-height:1.17;margin-bottom:1.2rem;}
+h2.act-d{color:#fff;}h2.act-w{color:var(--tx);}
+.bd{font-size:.94rem;line-height:1.82;color:rgba(255,255,255,.5);}
+.bw{font-size:.94rem;line-height:1.82;color:#4a5568;}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;
+  background:rgba(255,255,255,.07);padding:.08em .32em;border-radius:3px;}
+
+/* ── FINDING ── */
+.fd{border-left:3px solid;padding:.95rem 1.35rem;border-radius:0 4px 4px 0;margin:1.4rem 0;}
+.fd-c{border-color:var(--cy);background:rgba(0,229,255,.05);}
+.fd-c .fdl{color:var(--cy);}.fd-c .fdb{color:rgba(255,255,255,.58);}
+.fd-t{border-color:var(--teal);background:rgba(13,148,136,.06);}
+.fd-t .fdl{color:var(--teal);}.fd-t .fdb{color:#4a5568;}
+.fd-a{border-color:var(--amb);background:rgba(217,119,6,.06);}
+.fd-a .fdl{color:var(--amb);}.fd-a .fdb{color:#4a5568;}
+.fdl{font-family:'Space Mono',monospace;font-size:.63rem;
+  letter-spacing:.18em;text-transform:uppercase;margin-bottom:.35rem;}
+.fdb{font-size:.87rem;line-height:1.7;}
+
+/* ── STACK ── */
+.stk{max-width:520px;margin:2.2rem 0;}
+.sl{padding:.82rem 1.3rem;border:1px solid;border-radius:3px;
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:0;opacity:0;transform:translateX(-20px);
+  transition:opacity .5s,transform .5s;}
+.sl.vis{opacity:1;transform:translateX(0);}
+.sl1{background:rgba(0,229,255,.05);border-color:rgba(0,229,255,.25);}
+.sl2{background:rgba(13,148,136,.05);border-color:rgba(13,148,136,.25);}
+.sl3{background:rgba(99,102,241,.05);border-color:rgba(99,102,241,.22);}
+.sl4{background:rgba(217,119,6,.06);border-color:rgba(217,119,6,.25);}
+.sl5{background:rgba(63,185,80,.04);border-color:rgba(63,185,80,.2);}
+.sl-n{font-family:'JetBrains Mono',monospace;font-size:.86rem;color:#e2e8f0;font-weight:600;}
+.sl-d{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.33);}
+.sa{padding-left:1.3rem;color:rgba(0,229,255,.2);font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;line-height:1.35;letter-spacing:.04em;}
+
+/* ── CAPABILITY GRID ── */
+.cap-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:.8rem;margin:1.8rem 0;}
+.cp{border:1px solid;border-radius:4px;padding:.9rem 1rem;}
+.cp-ok{background:rgba(63,185,80,.05);border-color:rgba(63,185,80,.22);}
+.cp-no{background:rgba(248,81,73,.04);border-color:rgba(248,81,73,.18);}
+.cp-ic{font-size:.95rem;margin-bottom:.35rem;}
+.cp-nm{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#e2e8f0;font-weight:600;}
+.cp-nt{font-size:.73rem;color:rgba(255,255,255,.35);margin-top:.22rem;line-height:1.48;}
+
+/* ── TERMINAL ── */
+.trm{background:var(--term);border:1px solid rgba(0,229,255,.11);
+  border-radius:6px;overflow:hidden;margin:1.8rem 0;}
+.trm-bar{background:#161b22;padding:.5rem 1rem;display:flex;align-items:center;gap:.38rem;
+  border-bottom:1px solid rgba(255,255,255,.05);}
+.dot{width:9px;height:9px;border-radius:50%;}
+.tfn{font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.26);margin-left:.55rem;letter-spacing:.04em;}
+.tb{padding:1.1rem 1.35rem;font-family:'JetBrains Mono',monospace;
+  font-size:.75rem;line-height:1.75;color:#8b949e;}
+.tb.tall{max-height:480px;overflow-y:auto;}
+.tb.tall::-webkit-scrollbar{width:3px;}
+.tb.tall::-webkit-scrollbar-thumb{background:rgba(0,229,255,.18);border-radius:2px;}
+.tc{color:var(--cy);}.tg{color:var(--gn);}.tr{color:var(--rd);}
+.ta{color:var(--amb);}.tbb{color:var(--bl);}.td{color:rgba(255,255,255,.17);}
+.tp{color:rgba(255,255,255,.5);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.cur{display:inline-block;background:var(--cy);width:6px;height:.9em;
+  vertical-align:text-bottom;animation:blink 1s step-end infinite;}
+
+/* ── ITERATION TABLE ── */
+.iw{overflow-x:auto;margin:1.8rem 0;}
+table.it{width:100%;border-collapse:collapse;
+  font-family:'JetBrains Mono',monospace;font-size:.7rem;}
+table.it th{padding:.5rem .65rem;text-align:left;white-space:nowrap;
+  color:rgba(255,255,255,.28);border-bottom:1px solid rgba(255,255,255,.06);
+  font-weight:400;letter-spacing:.06em;}
+table.it td{padding:.47rem .65rem;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;}
+table.it tr:hover td{background:rgba(0,229,255,.025);}
+table.it tr.hl td{background:rgba(13,148,136,.07);}
+.ig{color:var(--gn);}.ir{color:var(--rd);}.ia{color:var(--amb);}
+.id{color:rgba(255,255,255,.18);}.ic{color:rgba(255,255,255,.42);}
+.bd2{display:inline-block;font-size:.58rem;padding:.06rem .3rem;
+  border-radius:2px;border:1px solid;margin-left:.28rem;vertical-align:middle;}
+.bug{background:rgba(248,81,73,.11);border-color:rgba(248,81,73,.28);color:var(--rd);}
+.fix{background:rgba(63,185,80,.09);border-color:rgba(63,185,80,.28);color:var(--gn);}
+
+/* ── MODEL CARDS ── */
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:1.8rem 0;}
+.mc{background:#fff;border:1px solid #e2ddd8;border-radius:6px;padding:1.35rem;
+  position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s;}
+.mc:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(0,0,0,.08);}
+.mc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.mc-go::before{background:linear-gradient(90deg,var(--amb),#fbbf24);}
+.mc-te::before{background:linear-gradient(90deg,var(--teal),#14b8a6);}
+.mc-sl::before{background:#94a3b8;}
+.mc-dm::before{background:#e2ddd8;}
+.mc-nm{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;
+  color:var(--tx);margin-bottom:.18rem;}
+.mc-rl{font-size:.74rem;color:#718096;margin-bottom:.9rem;}
+.bl{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:#a0aec0;margin:.55rem 0 .22rem;}
+.bw{background:#f0ede8;border-radius:2px;height:5px;overflow:hidden;}
+.bar{height:100%;width:0;border-radius:2px;transition:width 1.3s cubic-bezier(.4,0,.2,1);}
+.bg2{background:linear-gradient(90deg,var(--amb),#fbbf24);}
+.bt{background:linear-gradient(90deg,var(--teal),#14b8a6);}
+.bs{background:#94a3b8;}.bd3{background:#e2ddd8;}
+.sr{display:flex;justify-content:space-between;
+  font-family:'JetBrains Mono',monospace;font-size:.66rem;color:#a0aec0;margin-top:.12rem;}
+.chips{display:flex;flex-wrap:wrap;gap:.32rem;margin-top:.9rem;}
+.ch{font-family:'JetBrains Mono',monospace;font-size:.63rem;
+  padding:.13rem .42rem;border-radius:3px;border:1px solid;}
+.ch-ok{background:rgba(13,148,136,.07);border-color:rgba(13,148,136,.28);color:var(--teal);}
+.ch-wn{background:rgba(217,119,6,.07);border-color:rgba(217,119,6,.28);color:var(--amb);}
+.ch-fl{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.2);color:#e53e3e;}
+
+/* ── CHAIN ── */
+.chain{max-width:620px;margin:1.8rem 0;}
+.cs{display:flex;gap:.9rem;border:1px solid;border-radius:4px;
+  padding:.95rem 1.1rem;margin-bottom:.7rem;align-items:flex-start;}
+.cn{font-family:'Space Mono',monospace;font-size:.82rem;font-weight:700;
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;}
+.cs1{background:rgba(13,148,136,.08);border-color:rgba(13,148,136,.23);}
+.cs1 .cn{background:rgba(13,148,136,.18);color:var(--teal);}
+.cs2{background:rgba(217,119,6,.07);border-color:rgba(217,119,6,.2);}
+.cs2 .cn{background:rgba(217,119,6,.15);color:var(--amb);}
+.cs3{background:rgba(139,92,246,.07);border-color:rgba(139,92,246,.2);}
+.cs3 .cn{background:rgba(139,92,246,.15);color:#a78bfa;}
+.cs4{background:rgba(239,68,68,.05);border-color:rgba(239,68,68,.15);}
+.cs4 .cn{background:rgba(239,68,68,.12);color:#fc8181;}
+.cl{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--tx);}
+.cd{font-size:.77rem;color:#718096;margin-top:.13rem;line-height:1.52;}
+.ct{font-family:'JetBrains Mono',monospace;font-size:.6rem;
+  border:1px solid rgba(13,148,136,.26);color:var(--teal);
+  background:rgba(13,148,136,.06);padding:.08rem .38rem;border-radius:2px;
+  display:inline-block;margin-top:.38rem;}
+
+/* ── SCROLL REVEAL ── */
+.rv{opacity:0;transform:translateY(20px);transition:opacity .55s,transform .55s;}
+.rv.vs{opacity:1;transform:translateY(0);}
+
+/* ── FOOTER ── */
+footer{background:var(--dk);padding:2.8rem 1.5rem;text-align:center;
+  border-top:1px solid rgba(0,229,255,.07);}
+footer p{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.2);}
+footer a{color:rgba(0,229,255,.42);text-decoration:none;}
+footer a:hover{color:var(--cy);}
+
+@media(max-width:600px){
+  .mg,.cap-g{grid-template-columns:1fr;}
+  .hs{min-width:80px;padding:.7rem .9rem;}
+  .hs-n{font-size:1.2rem;}
+  .top-nav{padding:.65rem 1rem;}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="tn-back"><i class="fas fa-arrow-left" style="font-size:.68rem;"></i> All Insights</a>
+  <span class="tn-crumb">Edge AI Lab &nbsp;/ &nbsp;<em>Build Log · 2026</em></span>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hg"></div>
+  <div class="hsw"></div>
+  <div class="brkt tl"></div><div class="brkt tr"></div>
+  <div class="brkt bl"></div><div class="brkt br"></div>
+
+  <div class="h-eye">Edge AI Lab &nbsp;·&nbsp; Build Log &nbsp;·&nbsp; 2026</div>
+  <h1>Run AI Without<br>the <em>Cloud</em></h1>
+  <p class="h-sub">A complete engineering diary: bare hardware to production inference. Five 1.5B LLMs. Fifteen benchmark iterations. One 40 TOPS edge accelerator. Zero API credits required.</p>
+
+  <div class="h-stats">
+    <div class="hs"><div class="hs-n">40</div><div class="hs-l">TOPS INT4</div></div>
+    <div class="hs"><div class="hs-n">15</div><div class="hs-l">Iterations</div></div>
+    <div class="hs"><div class="hs-n">100<span style="font-size:.9rem;">%</span></div><div class="hs-l">Best Accuracy</div></div>
+    <div class="hs"><div class="hs-n">34<span style="font-size:.9rem;">s</span></div><div class="hs-l">Min Latency</div></div>
+    <div class="hs"><div class="hs-n">0</div><div class="hs-l">API Credits</div></div>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- ACT 0 -->
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-c rv">Act 0 &nbsp;·&nbsp; The Problem</div>
+  <h2 class="act act-d rv">Every automated pipeline has a silent failure mode</h2>
+  <p class="bd rv">API credit exhaustion. It happens mid-cycle, without warning. The queue goes empty. Scheduled content doesn't go out. The system is healthy — it just has no brain.</p>
+  <br>
+  <p class="bd rv">The engineering objective: build a local AI inference node that generates structured content autonomously — offline, no rate limits, no billing — and activates automatically when cloud services are unavailable. The output schema had to be byte-compatible with the cloud path. The downstream renderer would never know which tier ran.</p>
+
+  <div class="fd fd-c rv">
+    <div class="fdl">The Hard Constraint</div>
+    <div class="fdb">Format compliance wasn't a nice-to-have. It was the entire problem. Slides that couldn't be parsed by the renderer were worse than no slides. Every benchmark iteration measured one thing: can this model produce output a regex grader accepts 100% of the time?</div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 1 -->
+<div class="bd-dm"></div>
+<section class="s-md">
+<div class="inn">
+  <div class="eye eye-c rv">Act 1 &nbsp;·&nbsp; Hardware</div>
+  <h2 class="act act-d rv">The Stack</h2>
+  <p class="bd rv">The Raspberry Pi AI HAT+ 2 pairs an RPi5 with a Hailo-10H NPU — 40 TOPS INT4, 8 GB dedicated on-board DRAM. The H10 handles all inference. The Pi 5 CPU stays near-zero. Models are pre-compiled to HEF (Hailo Executable Format) — no GGUF, no llama.cpp, no CUDA.</p>
+
+  <div class="stk rv" id="stk">
+    <div class="sl sl1" style="transition-delay:.05s;"><span class="sl-n">Python Application</span><span class="sl-d">urllib · HTTP over LAN · port 8000</span></div>
+    <div class="sa">↓ &nbsp;REST API</div>
+    <div class="sl sl2" style="transition-delay:.15s;"><span class="sl-n">hailo-ollama v0.5.1</span><span class="sl-d">Oat++ C++ server · Ollama-compatible REST</span></div>
+    <div class="sa">↓ &nbsp;HailoRT C++ API</div>
+    <div class="sl sl3" style="transition-delay:.25s;"><span class="sl-n">HailoRT Runtime</span><span class="sl-d">Tokenisation · KV-cache · Post-processing</span></div>
+    <div class="sa">↓ &nbsp;PCIe Gen 3</div>
+    <div class="sl sl4" style="transition-delay:.35s;"><span class="sl-n">Hailo-10H NPU</span><span class="sl-d">40 TOPS INT4 · HEF format · 8 GB DRAM</span></div>
+    <div class="sa">↓ &nbsp;Physical</div>
+    <div class="sl sl5" style="transition-delay:.45s;"><span class="sl-n">Raspberry Pi 5</span><span class="sl-d">ARM Cortex-A76 · Debian Trixie</span></div>
+  </div>
+
+  <div class="fd fd-c rv">
+    <div class="fdl">Critical Discovery — Before Writing Any Code</div>
+    <div class="fdb">hailo-ollama is <strong style="color:#fff;">not standard Ollama</strong>. It implements only the REST side. Port 11434 doesn't exist. The <code>ollama</code> CLI binary is incompatible. <code>format:"json"</code>, stop sequences, and assistant prefill are silently ignored. Every assumption about Ollama compatibility needed empirical verification before a benchmark was written.</div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 2 -->
+<div class="bd-md"></div>
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-c rv">Act 2 &nbsp;·&nbsp; API Discovery</div>
+  <h2 class="act act-d rv">Probe before you build</h2>
+  <p class="bd rv">A 14-test diagnostic suite verified every API capability with raw curl across two rounds. The results determined which features the benchmark could rely on and which had to be worked around entirely.</p>
+
+  <div class="trm rv">
+    <div class="trm-bar">
+      <div class="dot" style="background:#f85149;"></div>
+      <div class="dot" style="background:#f0b429;"></div>
+      <div class="dot" style="background:#3fb950;"></div>
+      <span class="tfn">hailo_diag.sh + hailo_diag2.sh &nbsp;·&nbsp; 10.42.0.19:8000</span>
+    </div>
+    <div class="tb tall">
+<span class="td"># ── ROUND 1: Service Probe ──────────────────────────────────</span><br>
+<span class="td">$ </span><span class="tc">nc -z -w 3 10.42.0.19 8000</span><br>
+<span class="tg">✅ Port 8000 open on 10.42.0.19</span><br>
+<span class="td">$ </span><span class="tc">nc -z -w 2 10.42.0.19 11434</span><br>
+<span class="td">Port 11434: NOT open  ← hailo-ollama is NOT standard Ollama</span><br><br>
+<span class="td">$ </span><span class="tc">curl http://10.42.0.19:8000/api/version</span><br>
+<span class="tbb">{"version":"0.5.1"}  </span><span class="td"># Oat++ C++ server, hailo-gen-ai-model-zoo 5.1.1</span><br><br>
+<span class="td"># ── TEST: format:"json" ─────────────────────────────────────</span><br>
+<span class="td">$ </span><span class="tc">curl ... -d '{"format":"json","messages":[...]}'</span><br>
+<span class="ta">→ "I'm sorry, but as a text-based AI model, I can't generate JSON..."</span><br>
+<span class="tr">❌ format:json accepted (HTTP 200) but SILENTLY IGNORED by HEF runtime</span><br><br>
+<span class="td"># ── TEST: stop sequences ────────────────────────────────────</span><br>
+<span class="td">$ </span><span class="tc">curl ... -d '{"options":{"stop":["four"]}}' # count 1 to 10</span><br>
+<span class="ta">→ "one two three four five six seven eight nine ten" (eval_count: 19)</span><br>
+<span class="tr">❌ Stop accepted, NOT enforced — full list returned regardless</span><br><br>
+<span class="td"># ── TEST: assistant prefill ─────────────────────────────────</span><br>
+<span class="td">$ </span><span class="tc">curl ... -d '{"messages":[...,{"role":"assistant","content":"{"}]}'</span><br>
+<span class="tr">❌ Model ignored partial assistant turn — answered fresh from scratch</span><br><br>
+<span class="td"># ── ROUND 2: Determinism (3 identical prompts, temp:0.0) ────</span><br>
+<span class="td">$ </span><span class="tc">for i in 1 2 3; do curl ... "describe blue in 5 words"; done</span><br>
+<span class="tg">Run 1: A cool, soothing shade of deep water.</span><br>
+<span class="tg">Run 2: A cool, soothing shade of deep water.</span><br>
+<span class="tg">Run 3: A cool, soothing shade of deep water.</span><br>
+<span class="tg">✅ temperature:0.0 IS forwarded to HEF — truly deterministic</span><br><br>
+<span class="td"># ── TEST: num_predict (hard token ceiling) ──────────────────</span><br>
+<span class="td">$ </span><span class="tc">curl ... -d '{"options":{"num_predict":10}}' # count 1 to 100</span><br>
+<span class="tg">eval_count: 10  ← exact match — hard ceiling confirmed</span><br>
+<span class="tg">✅ num_predict IS forwarded — key overflow control lever</span>
+    </div>
+  </div>
+
+  <div style="font-family:'Space Mono',monospace;font-size:.73rem;letter-spacing:.18em;
+    text-transform:uppercase;color:rgba(255,255,255,.32);margin:2rem 0 1rem;" class="rv">
+    Capability Matrix — Verified Results
+  </div>
+  <div class="cap-g rv">
+    <div class="cp cp-ok"><div class="cp-ic">✅</div><div class="cp-nm">temperature: 0.0</div><div class="cp-nt">Forwarded to HEF. 3 identical runs confirmed. Kills Qwen2 variance.</div></div>
+    <div class="cp cp-ok"><div class="cp-ic">✅</div><div class="cp-nm">num_predict</div><div class="cp-nt">Hard token ceiling. eval_count matches exactly. Key overflow control.</div></div>
+    <div class="cp cp-ok"><div class="cp-ic">✅</div><div class="cp-nm">system role</div><div class="cp-nt">Applied by model. French-only system prompt test confirmed.</div></div>
+    <div class="cp cp-ok"><div class="cp-ic">✅</div><div class="cp-nm">stream: true</div><div class="cp-nt">NDJSON token streaming. Used for live elapsed-time ticker.</div></div>
+    <div class="cp cp-no"><div class="cp-ic">❌</div><div class="cp-nm">format: "json"</div><div class="cp-nt">HTTP 200 but prose response. Bridge silently drops this field.</div></div>
+    <div class="cp cp-no"><div class="cp-ic">❌</div><div class="cp-nm">stop sequences</div><div class="cp-nt">Accepted but HEF runtime ignores it. Count 1-10 returns all 10.</div></div>
+    <div class="cp cp-no"><div class="cp-ic">❌</div><div class="cp-nm">assistant prefill</div><div class="cp-nt">Bridge passes message but HEF has no completion mode.</div></div>
+    <div class="cp cp-no"><div class="cp-ic">❌</div><div class="cp-nm">port 11434</div><div class="cp-nt">Does not exist. REST-only — not standard Ollama CLI.</div></div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 3 -->
+<div class="bd-dw"></div>
+<section class="s-wm">
+<div class="inn-w">
+  <div class="eye eye-t rv">Act 3 &nbsp;·&nbsp; The Benchmark</div>
+  <h2 class="act act-w rv">Fifteen iterations to convergence</h2>
+  <p class="bw rv">A 4-rule heuristic grader scored every model output: exact CTA string match (25 pts), SCRIPT word count ≤ 8 (25 pts), numerical data present (25 pts), forbidden title words absent (25 pts). Five models tested across 15 iterations of prompt engineering.</p>
+
+  <div class="fd fd-a rv">
+    <div class="fdl">The Grader Bug — Present in Iterations 6 through 13</div>
+    <div class="fdb">The CTA normalisation regex kept <code>@</code> symbols in the text but the target string had no <code>@</code> — so <code>"follow @rahuldeo2047"</code> never matched <code>"follow rahuldeo2047"</code>. Every model that produced the correct CTA string was scored 0 for seven iterations. DeepSeek-R1 was at 100% from iteration 6 — the grader was wrong, not the model. This is why you verify failure cases manually before trusting metrics.</div>
+  </div>
+
+  <div class="iw rv">
+  <table class="it">
+    <thead>
+      <tr><th>Iter</th><th>Key Change</th><th>deepseek-r1</th><th>coder</th><th>instruct</th><th>llama 3b</th><th>qwen2</th><th style="color:rgba(255,255,255,.2);">Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="id">6</td><td class="ic">XML boundaries, anti-chatter, 1200s timeout</td><td class="ig">100%<span class="bd2 bug">grader bug</span></td><td class="ia">75%<span class="bd2 bug">grader bug</span></td><td class="ia">50%</td><td class="ia">75%<span class="bd2 bug">grader bug</span></td><td class="ia">83%<span class="bd2 bug">grader bug</span></td><td class="id">CTA @ mismatch</td></tr>
+      <tr><td class="id">7</td><td class="ic">Few-shot injection</td><td class="ia">75%</td><td class="ia">50%</td><td class="ia">50%</td><td class="ia">75%</td><td class="ia">75%</td><td class="id">Literal mimicry backfire</td></tr>
+      <tr><td class="id">11</td><td class="ic">tqdm spinner, chained-pass, telemetry</td><td class="ig">100%<span class="bd2 bug">grader bug</span></td><td class="ia">75%</td><td class="ia">50%</td><td class="ia">75%</td><td class="ia">83%</td><td class="id">Oat++ drops format/stop confirmed</td></tr>
+      <tr><td class="id">12</td><td class="ic">Grader bug fixed — @ added to CTA target</td><td class="ig">100%<span class="bd2 fix">real</span></td><td class="ia">75%</td><td class="ia">50%</td><td class="ia">75%</td><td class="ir">25%</td><td class="id">True baseline visible first time</td></tr>
+      <tr><td class="id">13</td><td class="ic">PASS/FAIL examples, preamble stripper</td><td class="ir">75%</td><td class="ig">100%</td><td class="ia">50%</td><td class="ia">75%</td><td class="ia">50%</td><td class="id">Niche examples leaked into deepseek output</td></tr>
+      <tr><td class="id">14</td><td class="ic">num_predict=20 slide 5 — too short</td><td class="ir">25%</td><td class="ia">50%</td><td class="ia">75%</td><td class="ia">75%</td><td class="ia">50%</td><td class="id">CTA truncated mid-handle all models</td></tr>
+      <tr class="hl"><td class="id">15</td><td class="ic">Model-specific np, chemistry examples, PASS-only</td><td class="ig">100%<span class="bd2 fix">stable</span></td><td class="ia">75%<span class="bd2 fix">stable</span></td><td class="ia">50%</td><td class="ia">75%</td><td class="ir">25%</td><td class="id">Primary confirmed. Secondary viable.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="fd fd-t rv">
+    <div class="fdl">What the iterations taught</div>
+    <div class="fdb">Format examples in system prompts must use a domain unrelated to the test niche — otherwise the model echoes examples into real output. <code>num_predict</code> must be model-specific not slide-specific — DeepSeek needs 800 tokens for its reasoning chain; 60 kills it entirely. FAIL examples actively harm small models — they copy them verbatim.</div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 4 -->
+<div class="bd-wo"></div>
+<section class="s-of">
+<div class="inn">
+  <div class="eye eye-t rv">Act 4 &nbsp;·&nbsp; Terminal Replay</div>
+  <h2 class="act act-w rv">What 100% looks like in the terminal</h2>
+  <p class="bw rv">DeepSeek-R1 1.5B, Benchmark 15. The <code>&lt;think&gt;</code> chain — hundreds of reasoning tokens — is stripped before parsing. What remains is the final structured output verified by all four grader rules.</p>
+
+  <div class="trm rv">
+    <div class="trm-bar">
+      <div class="dot" style="background:#f85149;"></div>
+      <div class="dot" style="background:#f0b429;"></div>
+      <div class="dot" style="background:#3fb950;"></div>
+      <span class="tfn">run_benchmark_15.py &nbsp;·&nbsp; deepseek_r1_distill_qwen:1.5b</span>
+    </div>
+    <div class="tb">
+<span class="td">[WARMUP] deepseek_r1_distill_qwen:1.5b</span><br>
+<span class="tg">  ✅ Ready &nbsp; HEF loaded into H10 DRAM</span><br><br>
+<span class="td">  s1 np=800 | 00:52 ⚡   s2 np=800 | 01:35 ⚡</span><br>
+<span class="td">  s3 np=800 | 02:18 ⚡   s4 np=800 | 03:08 ⚡</span><br>
+<span class="td">  s5 np=60  | 00:22 ⚡</span><br><br>
+<span class="td">  [RAW] after &lt;think&gt; strip + SLIDE 1 anchor:</span><br>
+<span class="tg">    SLIDE 1: PHYSICAL AI LIMITS</span><br>
+<span class="tc">    SCRIPT: E2E models fail beyond 40% task complexity.</span><br>
+<span class="td">    FACT: End-to-end neural networks require 3x more training data than hybrid systems.</span><br>
+<span class="tg">    SLIDE 2: MODULAR STRENGTH</span><br>
+<span class="tc">    SCRIPT: Modular systems isolate faults in 15 subsystems.</span><br>
+<span class="tg">    SLIDE 3: BLACKBOX FAILURE</span><br>
+<span class="tc">    SCRIPT: Black-box E2E hides 90% of failure pathways.</span><br>
+<span class="tg">    SLIDE 4: HYBRID SYNTHESIS</span><br>
+<span class="tc">    SCRIPT: Hybrid models achieve 30% better performance metrics.</span><br>
+<span class="tg">    SLIDE 5: THE NEXT STEP</span><br>
+<span class="tc">    SCRIPT: Follow @rahuldeo2047 and @rahuldeo2147 now</span><br><br>
+<span class="td">  [EVAL] deepseek_r1_distill_qwen:1.5b:</span><br>
+<span class="tg">    ✅ CTA matched</span><br>
+<span class="tg">    ✅ Word limit OK (worst: 6)</span><br>
+<span class="tg">    ✅ Data present</span><br>
+<span class="tg">    ✅ Titles valid</span><br><br>
+<span style="color:var(--amb);font-weight:600;">  >> deepseek_r1_distill_qwen:1.5b | 100.0% | 503.1s</span>
+    </div>
+  </div>
+
+  <div class="trm rv" style="margin-top:1.2rem;">
+    <div class="trm-bar">
+      <div class="dot" style="background:#f85149;"></div>
+      <div class="dot" style="background:#f0b429;"></div>
+      <div class="dot" style="background:#3fb950;"></div>
+      <span class="tfn">run_benchmark_15.py &nbsp;·&nbsp; qwen2.5-coder:1.5b (secondary)</span>
+    </div>
+    <div class="tb">
+<span class="td">[WARMUP] qwen2.5-coder:1.5b &nbsp; ✅ Ready</span><br>
+<span class="td">  s1-s4 np=80 · s5 np=60 ⚡</span><br><br>
+<span class="tg">    SLIDE 5: THE NEXT STEP</span><br>
+<span class="tc">    SCRIPT: Follow @rahuldeo2047 and @rahuldeo2147 now</span><br>
+<span class="ta">    SCRIPT (s2): Traditional approach used today for zero-whip tentacle robotics...</span><br>
+<span class="tr">              → 19 words  ← structural verbosity in coder weights</span><br><br>
+<span class="td">  [EVAL]: ✅ CTA  ❌ Word overflow (19w)  ✅ Data  ✅ Titles</span><br>
+<span class="td">  >> qwen2.5-coder:1.5b | 75.0% | 34.1s</span><br>
+<span class="td">  # CTA reliable. Word overflow handled by app-layer truncation in production.</span>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 5 -->
+<div class="bd-ow"></div>
+<section class="s-wm">
+<div class="inn-w">
+  <div class="eye eye-t rv">Act 5 &nbsp;·&nbsp; Model Comparison</div>
+  <h2 class="act act-w rv">Final standings — Benchmark 15</h2>
+  <p class="bw rv">Five models. Same hardware. Same prompt. Same grader. Temperature locked at 0.0. Latency is per full 5-slide presentation.</p>
+
+  <div class="mg" id="mcg">
+    <div class="mc mc-go rv">
+      <div class="mc-nm">deepseek-r1-distill-qwen:1.5b</div>
+      <div class="mc-rl">Primary — production confirmed ★</div>
+      <div class="bl">FORMAT SCORE</div>
+      <div class="bw"><div class="bar bg2" data-w="100"></div></div>
+      <div class="sr"><span>0%</span><span style="color:var(--amb);font-weight:600;">100%</span></div>
+      <div class="bl">LATENCY (max = 1291s)</div>
+      <div class="bw"><div class="bar bg2" data-w="39" style="background:rgba(217,119,6,.45);"></div></div>
+      <div class="sr"><span>0s</span><span>503s</span></div>
+      <div class="chips">
+        <span class="ch ch-ok">CTA ✓</span><span class="ch ch-ok">Words ✓</span>
+        <span class="ch ch-ok">Data ✓</span><span class="ch ch-ok">Reasoning chain</span>
+        <span class="ch ch-wn">~8 min / presentation</span>
+      </div>
+    </div>
+
+    <div class="mc mc-te rv">
+      <div class="mc-nm">qwen2.5-coder:1.5b</div>
+      <div class="mc-rl">Secondary — viable with app-layer word truncation</div>
+      <div class="bl">FORMAT SCORE</div>
+      <div class="bw"><div class="bar bt" data-w="75"></div></div>
+      <div class="sr"><span>0%</span><span style="color:var(--teal);font-weight:600;">75%</span></div>
+      <div class="bl">LATENCY</div>
+      <div class="bw"><div class="bar bt" data-w="3" style="background:rgba(13,148,136,.4);"></div></div>
+      <div class="sr"><span>0s</span><span>34s</span></div>
+      <div class="chips">
+        <span class="ch ch-ok">CTA ✓</span><span class="ch ch-wn">Words — 19w overflow</span>
+        <span class="ch ch-ok">Data ✓</span><span class="ch ch-ok">Fast</span>
+      </div>
+    </div>
+
+    <div class="mc mc-sl rv">
+      <div class="mc-nm">llama3.2:3b</div>
+      <div class="mc-rl">75% — latency disqualifies production</div>
+      <div class="bl">FORMAT SCORE</div>
+      <div class="bw"><div class="bar bs" data-w="75"></div></div>
+      <div class="sr"><span>0%</span><span style="color:#718096;">75%</span></div>
+      <div class="bl">LATENCY</div>
+      <div class="bw"><div class="bar bs" data-w="100"></div></div>
+      <div class="sr"><span>0s</span><span>1291s</span></div>
+      <div class="chips">
+        <span class="ch ch-fl">CTA — 'd' dropout in handle 2</span>
+        <span class="ch ch-ok">Words ✓</span><span class="ch ch-wn">21 min</span>
+      </div>
+    </div>
+
+    <div class="mc mc-dm rv">
+      <div class="mc-nm">qwen2.5-instruct:1.5b</div>
+      <div class="mc-rl">50% — EOS fires mid-CTA, weights-level</div>
+      <div class="bl">FORMAT SCORE</div>
+      <div class="bw"><div class="bar bd3" data-w="50"></div></div>
+      <div class="sr"><span>0%</span><span style="color:#a0aec0;">50%</span></div>
+      <div class="chips">
+        <span class="ch ch-fl">CTA — EOS at @rahulreo</span>
+        <span class="ch ch-fl">Word overflow</span>
+      </div>
+    </div>
+
+    <div class="mc mc-dm rv">
+      <div class="mc-nm">qwen2:1.5b (base)</div>
+      <div class="mc-rl">25% — base model, no instruction tuning</div>
+      <div class="bl">FORMAT SCORE</div>
+      <div class="bw"><div class="bar bd3" data-w="25"></div></div>
+      <div class="sr"><span>0%</span><span style="color:#a0aec0;">25%</span></div>
+      <div class="chips">
+        <span class="ch ch-fl">No instruction following</span>
+        <span class="ch ch-fl">Speed baseline only</span>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 6 -->
+<div class="bd-wd"></div>
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-c rv">Act 6 &nbsp;·&nbsp; Production Integration</div>
+  <h2 class="act act-d rv">The fallback chain</h2>
+  <p class="bd rv">The local node slots into the pipeline as tier 3. All tiers produce the identical slide schema — the downstream renderer never knows which tier ran. Every slide dict carries <code>generator</code> and <code>model_version</code> for future analytics correlation.</p>
+
+  <div class="chain rv">
+    <div class="cs cs1">
+      <div class="cn">1</div>
+      <div><div class="cl">Cloud Primary</div>
+      <div class="cd">Claude via Anthropic API. Full analytics context. Best quality. Runs when credits available.</div>
+      <span class="ct">generator: "claude"</span></div>
+    </div>
+    <div class="cs cs2">
+      <div class="cn">2</div>
+      <div><div class="cl">Cloud Secondary</div>
+      <div class="cd">Gemini API. Fast-fail on quota — doesn't block the pipeline for 60 minutes waiting for reset.</div>
+      <span class="ct">generator: "gemini"</span></div>
+    </div>
+    <div class="cs cs3">
+      <div class="cn">3</div>
+      <div><div class="cl">Local LLM — RPi5 + Hailo-10H</div>
+      <div class="cd">deepseek-r1 primary (100%, ~8 min) → qwen2.5-coder secondary (75%, ~34s). No internet. No credits. Vedic niche skipped — insufficient 1.5B training data causes output contamination.</div>
+      <span class="ct">generator: "local-deepseek-r1"</span></div>
+    </div>
+    <div class="cs cs4">
+      <div class="cn">4</div>
+      <div><div class="cl">Repost Best Old Video</div>
+      <div class="cd">Scored by engagement: views + saves×3 + shares×5. Skips content less than 3 days old. Never posts empty.</div>
+      <span class="ct">fallback_source: "best_old_video"</span></div>
+    </div>
+  </div>
+
+  <div class="trm rv">
+    <div class="trm-bar">
+      <div class="dot" style="background:#f85149;"></div>
+      <div class="dot" style="background:#f0b429;"></div>
+      <div class="dot" style="background:#3fb950;"></div>
+      <span class="tfn">ai_engine.py &nbsp;·&nbsp; generate_slides_with_fallback()</span>
+    </div>
+    <div class="tb">
+<span class="td">2026-04-05 20:54:11 IST — WARNING — Cloud LLMs returned placeholder for phyai — trying local</span><br>
+<span class="td">2026-04-05 20:54:11 IST — INFO    — [LOCAL LLM] Trying deepseek_r1_distill_qwen:1.5b for phyai</span><br>
+<span class="tg">2026-04-05 21:02:53 IST — INFO    — [LOCAL LLM] Primary succeeded for phyai</span><br>
+<span class="tg">2026-04-05 21:02:53 IST — INFO    — [LOCAL LLM] phyai: 5 slides via deepseek_r1 (version=bench15)</span><br>
+<span class="tbb">2026-04-05 21:02:53 IST — INFO    — Slides generated via local LLM for phyai</span><br>
+<span class="td">  generator:     "local-deepseek-r1"</span><br>
+<span class="td">  model_version: "bench15"</span>
+    </div>
+  </div>
+</div>
+</section>
+
+<div class="bd-dw"></div>
+
+<footer>
+  <p style="margin-bottom:.45rem;">
+    <a href="index.html">← All Insights</a> &nbsp;·&nbsp;
+    <a href="https://github.com/rahuldeo2047" target="_blank" rel="noopener">@rahuldeo2047</a> &nbsp;·&nbsp;
+    <a href="https://github.com/rahuldeo2047/rd2047-insights" target="_blank" rel="noopener">GitHub</a>
+  </p>
+  <p style="margin-top:.5rem;">RD2047 Insights &nbsp;·&nbsp; Edge AI Lab &nbsp;·&nbsp; Build Log 2026</p>
+</footer>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(!e.isIntersecting) return;
+    e.target.classList.add('vs');
+    if(e.target.id === 'stk'){
+      e.target.querySelectorAll('.sl').forEach((l,i) =>
+        setTimeout(() => l.classList.add('vis'), i * 130));
+    }
+    if(e.target.classList.contains('mc')){
+      setTimeout(() => {
+        e.target.querySelectorAll('.bar').forEach(b => { b.style.width = b.dataset.w + '%'; });
+      }, 280);
+    }
+  });
+}, {threshold: 0.1});
+
+document.querySelectorAll('.rv, .mc, #stk').forEach(el => io.observe(el));
+
+window.addEventListener('load', () => {
+  document.querySelectorAll('.mc').forEach(card => {
+    if(card.getBoundingClientRect().top < window.innerHeight)
+      card.querySelectorAll('.bar').forEach(b => { b.style.width = b.dataset.w + '%'; });
+  });
+});
+</script>
+</body>
+</html>
