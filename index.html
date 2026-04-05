@@ -117,6 +117,153 @@
             color: #dc2626;
             opacity: 0.9;
         }
+
+        /* for the Edge offline AI */
+        
+        /* ── scan animation (reuses existing @keyframes scan) ── */
+        @keyframes scan-h {
+          0%   { top: -2px; opacity: 0; }
+          8%   { opacity: 1; }
+          92%  { opacity: 1; }
+          100% { top: calc(100% + 2px); opacity: 0; }
+        }
+        .edge-scan::after {
+          content: '';
+          position: absolute;
+          left: 0; right: 0; height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(0,229,255,0.7), transparent);
+          animation: scan-h 3.6s linear infinite;
+          pointer-events: none;
+          z-index: 5;
+        }
+        
+        /* pulse dot */
+        @keyframes edot { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.3;transform:scale(.65);} }
+        .edot { display:inline-block; width:7px; height:7px; border-radius:50%;
+          background:#00e5ff; animation:edot 1.9s ease-in-out infinite; vertical-align:middle; }
+        
+        /* gradient band into dark section */
+        .band-to-edge {
+          height: 56px;
+          background: linear-gradient(to bottom, var(--color-warmbg, #faf8f5), #080c14);
+        }
+        .band-from-edge {
+          height: 56px;
+          background: linear-gradient(to bottom, #080c14, var(--color-warmbg, #faf8f5));
+        }
+        
+        /* ── Edge AI dark section ── */
+        #edge-ai-lab {
+          background: #080c14;
+          padding: 4.5rem 1.5rem 5rem;
+          position: relative;
+          overflow: hidden;
+        }
+        #edge-ai-lab::before {
+          content: '';
+          position: absolute; inset: 0; pointer-events: none;
+          background-image:
+            linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+          background-size: 52px 52px;
+        }
+        .ea-inner { max-width: 72rem; margin: 0 auto; position: relative; z-index: 1; }
+        
+        .ea-eye {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: .68rem; color: #00e5ff; letter-spacing: .22em;
+          text-transform: uppercase; margin-bottom: .7rem;
+          display: flex; align-items: center; gap: .55rem;
+        }
+        .ea-title {
+          font-family: 'Merriweather', serif;
+          font-size: clamp(1.5rem,3vw,2.1rem); font-weight: 700;
+          color: #fff; line-height: 1.18; margin-bottom: .9rem;
+        }
+        .ea-title span { color: #00e5ff; }
+        .ea-desc {
+          font-size: .93rem; color: rgba(255,255,255,.45);
+          max-width: 600px; line-height: 1.78; margin-bottom: 2.2rem;
+        }
+        
+        /* stat row */
+        .ea-stats {
+          display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 2.4rem;
+        }
+        .ea-stat {
+          border: 1px solid rgba(0,229,255,.1);
+          background: rgba(0,229,255,.04);
+          border-radius: 4px; padding: .7rem 1.1rem; text-align: center; min-width: 90px;
+        }
+        .ea-stat-n {
+          font-family: 'Space Mono', monospace; font-size: 1.35rem; font-weight: 700;
+          color: #00e5ff; line-height: 1;
+        }
+        .ea-stat-l {
+          font-family: 'JetBrains Mono', monospace; font-size: .6rem;
+          color: rgba(255,255,255,.28); letter-spacing: .1em; text-transform: uppercase; margin-top: .25rem;
+        }
+        
+        /* ── main article card ── */
+        .ea-card {
+          display: block; text-decoration: none;
+          background: rgba(255,255,255,.025);
+          border: 1px solid rgba(0,229,255,.14);
+          border-radius: 6px; padding: 2rem;
+          position: relative; overflow: hidden;
+          transition: border-color .25s, background .25s, transform .2s, box-shadow .2s;
+        }
+        .ea-card:hover {
+          border-color: rgba(0,229,255,.38);
+          background: rgba(0,229,255,.04);
+          transform: translateY(-3px);
+          box-shadow: 0 12px 40px rgba(0,0,0,.4);
+        }
+        .ea-card-live {
+          font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+          color: #00e5ff; display: flex; align-items: center; gap: .5rem;
+          margin-bottom: .9rem; letter-spacing: .12em; text-transform: uppercase;
+        }
+        .ea-card-title {
+          font-family: 'Merriweather', serif; font-size: 1.25rem;
+          font-weight: 700; color: #fff; line-height: 1.22; margin-bottom: .85rem;
+        }
+        .ea-card-body {
+          font-size: .84rem; color: rgba(255,255,255,.42); line-height: 1.74;
+          margin-bottom: 1.2rem;
+        }
+        .ea-chips {
+          display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1.4rem;
+        }
+        .ea-chip {
+          font-family: 'JetBrains Mono', monospace; font-size: .65rem;
+          padding: .14rem .45rem; border-radius: 3px; border: 1px solid;
+        }
+        .ec-plain { border-color: rgba(255,255,255,.1); color: rgba(255,255,255,.35); }
+        .ec-ok    { border-color: rgba(13,148,136,.32); color: #0d9488; background: rgba(13,148,136,.07); }
+        .ec-amb   { border-color: rgba(217,119,6,.32);  color: #d97706; background: rgba(217,119,6,.07); }
+        .ea-card-cta {
+          font-family: 'JetBrains Mono', monospace; font-size: .78rem;
+          color: #00e5ff; display: flex; align-items: center; gap: .45rem;
+        }
+        .ea-card-cta i { transition: transform .2s; }
+        .ea-card:hover .ea-card-cta i { transform: translateX(4px); }
+        
+        /* corner accent on card */
+        .ea-card::before {
+          content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+          background: linear-gradient(90deg, transparent, rgba(0,229,255,.6), transparent);
+        }
+        
+        /* coming soon row */
+        .ea-soon {
+          margin-top: 1.4rem; display: flex; align-items: center;
+          gap: .65rem; flex-wrap: wrap;
+        }
+        .ea-soon-label {
+          font-family: 'JetBrains Mono', monospace; font-size: .65rem;
+          color: rgba(255,255,255,.18); letter-spacing: .12em; text-transform: uppercase;
+        }
     </style>
 </head>
 <body class="bg-warmbg text-textmain font-sans antialiased leading-relaxed min-h-screen flex flex-col">
@@ -407,6 +554,188 @@
                 </div>
             </a>
 
+             <!-- OFFLINE EDGE AI with 100% accuracy -->            
+            <a href="edge-ai-local-llm-journey.html"
+               class="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden
+                      hover:shadow-xl hover:border-cyan-400 transition-all duration-300
+                      flex flex-col h-full cursor-pointer transform hover:-translate-y-1 edge-scan"
+               style="position:relative;">
+            
+              <!-- dark header matching the NV card aesthetic -->
+              <div class="h-48 relative overflow-hidden flex items-center justify-center"
+                   style="background:#080c14;">
+            
+                <!-- grid overlay -->
+                <div class="absolute inset-0" style="background-image:
+                  linear-gradient(rgba(0,229,255,.04) 1px,transparent 1px),
+                  linear-gradient(90deg,rgba(0,229,255,.04) 1px,transparent 1px);
+                  background-size:44px 44px;"></div>
+            
+                <!-- radial glow -->
+                <div class="absolute inset-0" style="background:
+                  radial-gradient(circle at 50% 55%, rgba(0,229,255,.1) 0%, transparent 65%);"></div>
+            
+                <!-- animated stack diagram — 5 layers shrunk to fit -->
+                <div class="relative z-10 flex flex-col items-start" style="gap:0;width:220px;">
+                  <div style="background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.28);
+                    border-radius:2px;padding:.22rem .6rem;font-family:'JetBrains Mono',monospace;
+                    font-size:.6rem;color:#00e5ff;letter-spacing:.04em;width:100%;
+                    animation:fadeInStack 0.4s .1s both;">Python App → HTTP</div>
+                  <div style="width:1px;height:7px;background:rgba(0,229,255,.2);margin-left:16px;"></div>
+                  <div style="background:rgba(13,148,136,.07);border:1px solid rgba(13,148,136,.28);
+                    border-radius:2px;padding:.22rem .6rem;font-family:'JetBrains Mono',monospace;
+                    font-size:.6rem;color:#0d9488;letter-spacing:.04em;width:100%;
+                    animation:fadeInStack 0.4s .2s both;">hailo-ollama v0.5.1</div>
+                  <div style="width:1px;height:7px;background:rgba(0,229,255,.2);margin-left:16px;"></div>
+                  <div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.25);
+                    border-radius:2px;padding:.22rem .6rem;font-family:'JetBrains Mono',monospace;
+                    font-size:.6rem;color:#818cf8;letter-spacing:.04em;width:100%;
+                    animation:fadeInStack 0.4s .3s both;">HailoRT Runtime</div>
+                  <div style="width:1px;height:7px;background:rgba(0,229,255,.2);margin-left:16px;"></div>
+                  <div style="background:rgba(217,119,6,.07);border:1px solid rgba(217,119,6,.28);
+                    border-radius:2px;padding:.22rem .6rem;font-family:'JetBrains Mono',monospace;
+                    font-size:.6rem;color:#d97706;letter-spacing:.04em;width:100%;
+                    animation:fadeInStack 0.4s .4s both;">Hailo-10H NPU · 40 TOPS</div>
+                  <div style="width:1px;height:7px;background:rgba(0,229,255,.2);margin-left:16px;"></div>
+                  <div style="background:rgba(63,185,80,.05);border:1px solid rgba(63,185,80,.22);
+                    border-radius:2px;padding:.22rem .6rem;font-family:'JetBrains Mono',monospace;
+                    font-size:.6rem;color:#3fb950;letter-spacing:.04em;width:100%;
+                    animation:fadeInStack 0.4s .5s both;">Raspberry Pi 5</div>
+                </div>
+            
+                <!-- score badge top-right -->
+                <div class="absolute top-3 right-3 z-10" style="
+                  background:rgba(6,10,16,.92);border:1px solid rgba(63,185,80,.35);
+                  border-radius:4px;padding:.3rem .6rem;
+                  font-family:'JetBrains Mono',monospace;font-size:.65rem;color:#3fb950;
+                  line-height:1.4;">
+                  deepseek-r1<br>
+                  <span style="font-size:.85rem;font-weight:700;color:#3fb950;">100%</span>
+                  <span style="color:rgba(255,255,255,.3);"> acc</span>
+                </div>
+            
+                <!-- live pill top-left -->
+                <div class="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2 py-1 rounded"
+                     style="background:rgba(6,10,16,.9);border:1px solid rgba(0,229,255,.2);
+                       font-family:'JetBrains Mono',monospace;font-size:.65rem;color:#00e5ff;">
+                  <span class="edot"></span> Build Log · 2026
+                </div>
+              </div>
+            
+              <!-- card body -->
+              <div class="p-6 flex flex-col flex-grow">
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <span class="text-xs font-bold uppercase tracking-wider" style="color:#00e5ff;">Edge AI</span>
+                  <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">· Local LLM · Hardware</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-cyan-600 transition-colors duration-200">
+                  Run AI Without the Cloud
+                </h3>
+                <p class="text-gray-600 text-sm mb-4 flex-grow">
+                  15 benchmark iterations. 5 edge LLMs. One 40 TOPS NPU. How to get 100% structured-output accuracy from a 1.5B model running entirely offline — and wire it into a production fallback pipeline.
+                </p>
+                <!-- mini metric chips -->
+                <div class="flex flex-wrap gap-1.5 mb-4">
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                    style="background:rgba(13,148,136,.07);border:1px solid rgba(13,148,136,.25);color:#0d9488;">
+                    ✓ 100% accuracy
+                  </span>
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                    style="background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.18);color:#00e5ff;">
+                    RPi5 + Hailo-10H
+                  </span>
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                    style="background:rgba(217,119,6,.07);border:1px solid rgba(217,119,6,.22);color:#d97706;">
+                    0 API credits
+                  </span>
+                </div>
+                <div class="font-semibold text-sm flex items-center" style="color:#00e5ff;">
+                  Read the build log
+                  <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+              </div>
+            </a>
+            
+            <!-- keyframes for card stack animation -->
+            <style>
+            @keyframes fadeInStack{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
+            </style>
+            
+                        
+            <!-- gradient into dark -->
+            <div class="band-to-edge"></div>
+            
+            <section id="edge-ai-lab">
+              <div class="ea-inner">
+            
+                <div class="ea-eye">
+                  <span class="edot"></span>
+                  Edge AI Lab &nbsp;·&nbsp; Build Logs
+                </div>
+            
+                <h2 class="ea-title">
+                  <span>Run AI Without the Cloud</span><br>
+                  A field engineer's guide to edge LLM reliability.
+                </h2>
+            
+                <p class="ea-desc">
+                  Engineering diaries from building real inference systems on constrained hardware.
+                  Every assumption verified with a curl probe. Every failure documented.
+                  The kind of material that doesn't exist in vendor documentation.
+                </p>
+            
+                <!-- stats -->
+                <div class="ea-stats">
+                  <div class="ea-stat"><div class="ea-stat-n">40</div><div class="ea-stat-l">TOPS INT4</div></div>
+                  <div class="ea-stat"><div class="ea-stat-n">15</div><div class="ea-stat-l">Iterations</div></div>
+                  <div class="ea-stat"><div class="ea-stat-n">100<span style="font-size:.9rem;">%</span></div><div class="ea-stat-l">Best Accuracy</div></div>
+                  <div class="ea-stat"><div class="ea-stat-n">34<span style="font-size:.85rem;">s</span></div><div class="ea-stat-l">Min Latency</div></div>
+                  <div class="ea-stat"><div class="ea-stat-n">5</div><div class="ea-stat-l">LLMs Tested</div></div>
+                  <div class="ea-stat"><div class="ea-stat-n">0</div><div class="ea-stat-l">API Credits</div></div>
+                </div>
+            
+                <!-- main article card -->
+                <a class="ea-card" href="edge-ai-local-llm-journey.html">
+                  <div class="ea-card-live">
+                    <span class="edot"></span>
+                    Build Log &nbsp;·&nbsp; April 2026
+                  </div>
+                  <div class="ea-card-title">
+                    From Bare Hardware to Production Inference:<br>
+                    Running a Local LLM on a 40 TOPS Edge Accelerator
+                  </div>
+                  <div class="ea-card-body">
+                    A complete engineering diary across six acts — probing hailo-ollama's REST API with raw curl to understand what it actually supports, designing a heuristic grader that caught its own silent bug in iteration 12, pushing five 1.5B models through 15 prompt engineering iterations, and wiring the 100%-accurate winner into a 4-tier production fallback pipeline. Real terminal output. Real benchmark scores. Every failure documented.
+                  </div>
+                  <div class="ea-chips">
+                    <span class="ea-chip ec-plain">RPi5 + Hailo-10H</span>
+                    <span class="ea-chip ec-plain">hailo-ollama v0.5.1</span>
+                    <span class="ea-chip ec-ok">deepseek-r1 100%</span>
+                    <span class="ea-chip ec-ok">qwen2.5-coder 75%</span>
+                    <span class="ea-chip ec-amb">15 benchmark iterations</span>
+                    <span class="ea-chip ec-amb">grader bug documented</span>
+                    <span class="ea-chip ec-plain">capability matrix</span>
+                    <span class="ea-chip ec-plain">fallback chain</span>
+                  </div>
+                  <div class="ea-card-cta">
+                    Read the full build log &nbsp;<i class="fas fa-arrow-right" style="font-size:.72rem;"></i>
+                  </div>
+                </a>
+            
+                <!-- coming soon -->
+                <div class="ea-soon">
+                  <span class="ea-soon-label">Coming soon</span>
+                  <span class="ea-chip ec-plain">Stable Diffusion on H10</span>
+                  <span class="ea-chip ec-plain">6-Niche Reasoning Stress Test</span>
+                  <span class="ea-chip ec-plain">Analytics-Informed Local Generation</span>
+                </div>
+            
+              </div>
+            </section>
+            
+            <!-- gradient out of dark -->
+            <div class="band-from-edge"></div>
+
             <!-- ── DRAFT: Indigenous Quantum Framework ── -->
             <div class="bg-gray-50 rounded-2xl border border-gray-200 border-dashed overflow-hidden flex flex-col h-full relative">
                 <div class="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
@@ -424,6 +753,8 @@
                     <p class="text-gray-500 text-sm flex-grow">Exploring how the foundational principles of Advaita and Nada Brahma mirror quantum superposition and entanglement.</p>
                 </div>
             </div>
+
+            <!-- ── Above is a part of Local 100% accurate edge AI ── -->
 
             <!-- ── DRAFT: Zero-Latency Offline Edge Loop ── -->
             <div class="bg-gray-50 rounded-2xl border border-gray-200 border-dashed overflow-hidden flex flex-col h-full relative">
@@ -444,6 +775,7 @@
             </div>
 
         </div><!-- /grid -->
+        
 
     </main>
 
