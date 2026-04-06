@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rahul Deo | Neural Synthesis v1.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0b;
+            --accent-cyan: #00e5ff;
+            --accent-orange: #ff8c00;
+            --text-main: #e0e0e0;
+            --panel-bg: rgba(20, 20, 25, 0.8);
+            --border-glow: 0 0 10px rgba(0, 229, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Roboto Mono', monospace;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Background Animation */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: top;
+            animation: moveGrid 20s linear infinite;
+        }
+
+        @keyframes moveGrid {
+            from { background-position: 0 0; }
+            to { background-position: 0 1000px; }
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header Section */
+        header {
+            text-align: center;
+            padding: 100px 0 60px;
+            border-bottom: 1px solid var(--accent-cyan);
+            box-shadow: var(--border-glow);
+            margin-bottom: 50px;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 20px var(--accent-cyan);
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            color: var(--accent-orange);
+            font-weight: bold;
+        }
+
+        /* Panel Styling */
+        .panel {
+            background: var(--panel-bg);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, transparent 50%, rgba(255, 140, 0, 0.1) 50%);
+        }
+
+        /* The Terminal Window */
+        .terminal {
+            background: #000;
+            border-radius: 5px;
+            padding: 20px;
+            font-size: 0.9rem;
+            color: #33ff33;
+            box-shadow: inset 0 0 15px rgba(0, 255, 0, 0.2);
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .terminal-header {
+            color: #888;
+            border-bottom: 1px solid #333;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+
+        .think-tag { color: var(--accent-orange); }
+        .success-tag { color: var(--accent-cyan); }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background: #222;
+            height: 10px;
+            margin: 10px 0;
+        }
+
+        .progress-bar {
+            background: var(--accent-cyan);
+            height: 100%;
+            width: 90%; /* Representing Convergence */
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        /* Timeline / Todo List */
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent-orange);
+            margin-right: 15px;
+            position: relative;
+        }
+
+        .checkbox.checked::after {
+            content: "✓";
+            position: absolute;
+            top: -5px;
+            left: 2px;
+            color: var(--accent-cyan);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 60px;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .highlight { color: var(--accent-cyan); }
+
+    </style>
+</head>
+<body>
+
+    <div class="grid-bg"></div>
+
+    <div class="container">
+        <header>
+            <h1>NEURAL SYNTHESIS v1.0</h1>
+            <p class="tagline">Rahul Deo // Exclusive AI Content Architecture</p>
+            <p style="margin-top:20px; font-size: 0.8rem;">[ LOGGED IN AS: RAHULDEO2047 ]</p>
+        </header>
+
+        <section class="panel">
+            <h2>01. THE JOURNEY</h2>
+            <p>We successfully bridged the gap between raw technical complexity and deterministic output. By fine-tuning a <strong>DeepSeek-R1-Distill-Qwen-1.5B</strong> model, we have built a reasoning scout capable of "thinking" through constraints before execution.</p>
+            
+            <div class="terminal">
+                <div class="terminal-header">training_log_final_run.exe</div>
+                <div>> Initializing Unsloth 2026.4.2...</div>
+                <div>> Tesla T4 Active // VRAM utilized: 5.8GB</div>
+                <div>> Loss Convergence: <span class="success-tag">0.338</span></div>
+                <div>> Status: <span class="success-tag">DETERMINISTIC WEIGHTS HARDENED</span></div>
+            </div>
+        </section>
+
+        <section class="panel" style="border-color: var(--accent-orange);">
+            <h2>02. THE HARDENED REASONING</h2>
+            <p>Our model doesn't just guess; it counts. It verifies every SCRIPT against the 8-word limit inside its <strong>&lt;think&gt;</strong> sandbox.</p>
+            
+            <div class="terminal" style="color: #e0e0e0;">
+                <div class="terminal-header">inference_test_001.log</div>
+                <div><span class="think-tag">&lt;think&gt;</span></div>
+                <div>Topic: Thermal Throttling on RPi5.</div>
+                <div>Drafting Slide 1 SCRIPT: "Thermal throttling disrupts your robot's autonomy."</div>
+                <div>Check: Count = 7 words. <span class="success-tag">Valid.</span></div>
+                <div>Check: Exclusions = None. <span class="success-tag">Valid.</span></div>
+                <div><span class="think-tag">&lt;/think&gt;</span></div>
+                <div style="margin-top:10px; color: var(--accent-cyan);">SLIDE 1: REAL TIME CONTROL</div>
+                <div>SCRIPT: Thermal throttling disrupts your robot's autonomy.</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>03. MISSION OBJECTIVES</h2>
+            <div class="todo-list">
+                <div class="todo-item">
+                    <div class="checkbox checked"></div>
+                    <div>Phase 1: Fine-Tune 1.5B reasoning model (Loss < 0.4)</div>
+                </div>
+                <div class="todo-item">
+                    <div class="checkbox checked"></div>
+                    <div>LoRA Adapter Persistence: Saved to GDrive</div>
+                </div>
+                <div class="todo-item">
+                    <div class="checkbox"></div>
+                    <div>RPi5 Edge Deployment: Merge LoRA to GGUF for Ollama</div>
+                </div>
+                <div class="todo-item">
+                    <div class="checkbox"></div>
+                    <div>NPU Port: Compile HEF for Hailo-10 (40 TOPS)</div>
+                </div>
+                <div class="todo-item">
+                    <div class="checkbox"></div>
+                    <div>Exclusion Logic: Implement 50-entity Mech-History</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>04. RECURSIVE IMPROVEMENTS</h2>
+            <p>The roadmap for parallel engineering:</p>
+            <ul>
+                <li><span class="highlight">Vedic-Quantum Mapping:</span> Adding 200+ datasets correlating Shastra logic to state vectors.</li>
+                <li><span class="highlight">Dual-Model Critic:</span> Deploying a secondary model for real-time fact-checking.</li>
+                <li><span class="highlight">Neck Guardian Integration:</span> Direct interface for real-time ergonomics coaching.</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 RAHUL DEO // QUANTUM ROBOTICS DIVISION</p>
+            <p>All Mechanisms Deterministic // @rahuldeo2047 // @rahuldeo2147</p>
+        </footer>
+    </div>
+
+    <script>
+        // Optional: Simple glitch effect on the header
+        const h1 = document.querySelector('header h1');
+        setInterval(() => {
+            if(Math.random() > 0.95) {
+                h1.style.textShadow = '2px 2px #ff8c00, -2px -2px #00e5ff';
+                setTimeout(() => {
+                    h1.style.textShadow = '0 0 20px var(--accent-cyan)';
+                }, 100);
+            }
+        }, 200);
+    </script>
+</body>
+</html>
