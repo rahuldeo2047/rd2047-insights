@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Worldtube Must Be Real | Block Universe &amp; Proper Time | RD2047 Insights</title>
+<meta name="description" content="An ordinary rock on a table is silent evidence that the future already exists. Proper-time divergence, electromagnetic cohesion, and the geometry of bound matter — a physics paper in progress. The question, not the full answer.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());gtag('config','G-8Y8EYHB278',{anonymize_ip:true});
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('a[href]').forEach(function(l){
+    l.addEventListener('click',function(){
+      var d=l.getAttribute('href')||'unknown';
+      var lb=l.querySelector('h3')?l.querySelector('h3').innerText.trim().slice(0,80):(l.innerText.trim().slice(0,80)||d);
+      gtag('event','link_click',{event_category:'worldtube',event_label:lb,link_destination:d,page_path:window.location.pathname});
+    });
+  });
+});
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,300;0,700;1,300&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf8f5;--tx:#2d3748;--teal:#0d9488;--amb:#d97706;
+  --dk:#080c14;--md:#0f1824;--term:#0d1117;
+  --cy:#00e5ff;--gn:#3fb950;--rd:#f85149;--bl:#58a6ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+.top-nav{position:fixed;top:0;left:0;right:0;z-index:200;
+  background:rgba(8,12,20,0.96);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(217,119,6,0.12);
+  padding:.65rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.tn-back{font-family:'Space Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.4);
+  text-decoration:none;display:flex;align-items:center;gap:.5rem;transition:color .2s;}
+.tn-back:hover{color:var(--amb);}
+.tn-crumb{font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.22);letter-spacing:.05em;}
+.tn-crumb em{color:var(--amb);font-style:normal;}
+
+.hero{min-height:100vh;background:var(--dk);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:7rem 1.5rem 5rem;position:relative;overflow:hidden;}
+.hg{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(217,119,6,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(217,119,6,.035) 1px,transparent 1px);
+  background-size:54px 54px;}
+@keyframes sweep{0%{transform:translateY(-100%);}100%{transform:translateY(110vh);}}
+.hsw{position:absolute;left:0;right:0;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(217,119,6,.3),transparent);
+  animation:sweep 11s linear infinite;}
+.brkt{position:absolute;width:36px;height:36px;border-color:rgba(217,119,6,.25);border-style:solid;}
+.tl{top:5.5rem;left:1.8rem;border-width:2px 0 0 2px;}
+.tr{top:5.5rem;right:1.8rem;border-width:2px 2px 0 0;}
+.blc{bottom:2.5rem;left:1.8rem;border-width:0 0 2px 2px;}
+.brc{bottom:2.5rem;right:1.8rem;border-width:0 2px 2px 0;}
+
+.h-eye{font-family:'Space Mono',monospace;font-size:.67rem;color:var(--amb);
+  letter-spacing:.24em;text-transform:uppercase;margin-bottom:1.4rem;
+  opacity:0;animation:fup .5s .2s forwards;}
+.hero h1{font-family:'Merriweather',serif;font-size:clamp(1.9rem,5vw,3.5rem);
+  font-weight:700;color:#fff;line-height:1.1;max-width:840px;
+  opacity:0;animation:fup .6s .4s forwards;}
+.hero h1 em{font-style:normal;color:var(--amb);}
+.h-sub{margin-top:1.4rem;font-size:.97rem;color:rgba(255,255,255,.43);
+  max-width:600px;line-height:1.8;opacity:0;animation:fup .6s .65s forwards;}
+.h-stats{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center;
+  margin-top:2.8rem;opacity:0;animation:fup .6s .9s forwards;}
+.hs{border:1px solid rgba(217,119,6,.15);background:rgba(217,119,6,.05);
+  padding:.85rem 1.3rem;border-radius:4px;text-align:center;min-width:100px;}
+.hs-n{font-family:'Space Mono',monospace;font-size:1.45rem;font-weight:700;
+  color:var(--amb);line-height:1;}
+.hs-l{font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  color:rgba(255,255,255,.28);letter-spacing:.1em;text-transform:uppercase;margin-top:.28rem;}
+.scroll-hint{position:absolute;bottom:1.8rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  color:rgba(255,255,255,.18);font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  letter-spacing:.15em;animation:breathe 2.6s ease-in-out infinite;}
+.scroll-hint::before{content:'';display:block;width:1px;height:32px;
+  background:linear-gradient(to bottom,var(--amb),transparent);}
+@keyframes breathe{0%,100%{opacity:.25;}50%{opacity:.75;}}
+@keyframes fup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.s-dk{background:var(--dk);color:#e2e8f0;}
+.s-md{background:var(--md);color:#e2e8f0;}
+.s-wm{background:var(--bg);color:var(--tx);}
+.s-of{background:#f0ede8;color:var(--tx);}
+section{padding:4.5rem 1.5rem;}
+.bd-dw{height:55px;background:linear-gradient(to bottom,var(--dk),var(--bg));}
+.bd-wd{height:55px;background:linear-gradient(to bottom,var(--bg),var(--dk));}
+.bd-dm{height:35px;background:linear-gradient(to bottom,var(--dk),var(--md));}
+.bd-md{height:35px;background:linear-gradient(to bottom,var(--md),var(--dk));}
+.bd-ow{height:35px;background:linear-gradient(to bottom,#f0ede8,var(--bg));}
+.bd-wo{height:35px;background:linear-gradient(to bottom,var(--bg),#f0ede8);}
+.inn{max-width:840px;margin:0 auto;}
+
+.eye{font-family:'Space Mono',monospace;font-size:.66rem;
+  letter-spacing:.22em;text-transform:uppercase;margin-bottom:.65rem;}
+.eye-c{color:var(--cy);}.eye-t{color:var(--teal);}.eye-a{color:var(--amb);}
+h2.act{font-family:'Merriweather',serif;font-size:clamp(1.45rem,3vw,2.15rem);
+  font-weight:700;line-height:1.17;margin-bottom:1.2rem;}
+h2.act-d{color:#fff;}h2.act-w{color:var(--tx);}
+.bd{font-size:.94rem;line-height:1.82;color:rgba(255,255,255,.5);}
+.bw{font-size:.94rem;line-height:1.82;color:#4a5568;}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;
+  background:rgba(255,255,255,.07);padding:.08em .32em;border-radius:3px;}
+.s-wm code,.s-of code{background:rgba(0,0,0,.06);}
+
+.fd{border-left:3px solid;padding:.95rem 1.35rem;border-radius:0 4px 4px 0;margin:1.4rem 0;}
+.fd-c{border-color:var(--cy);background:rgba(0,229,255,.05);}
+.fd-c .fdl{color:var(--cy);}.fd-c .fdb{color:rgba(255,255,255,.58);}
+.fd-t{border-color:var(--teal);background:rgba(13,148,136,.06);}
+.fd-t .fdl{color:var(--teal);}.fd-t .fdb{color:#4a5568;}
+.fd-a{border-color:var(--amb);background:rgba(217,119,6,.06);}
+.fd-a .fdl{color:var(--amb);}.fd-a .fdb{color:#4a5568;}
+.fd-ad{border-color:var(--amb);background:rgba(217,119,6,.07);}
+.fd-ad .fdl{color:var(--amb);}.fd-ad .fdb{color:rgba(255,255,255,.58);}
+.fdl{font-family:'Space Mono',monospace;font-size:.63rem;
+  letter-spacing:.18em;text-transform:uppercase;margin-bottom:.35rem;}
+.fdb{font-size:.87rem;line-height:1.7;}
+
+/* empirical anchor strip */
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:.8rem;margin:1.9rem 0;}
+.cb{border:1px solid rgba(217,119,6,.18);background:rgba(217,119,6,.04);
+  border-radius:5px;padding:1.1rem 1.2rem;}
+.cb-l{font-family:'JetBrains Mono',monospace;font-size:.64rem;color:rgba(255,255,255,.4);
+  letter-spacing:.06em;text-transform:uppercase;margin-bottom:.5rem;}
+.cb-n{font-family:'Space Mono',monospace;font-size:1.15rem;color:var(--amb);font-weight:700;}
+.cb-s{font-size:.7rem;color:rgba(255,255,255,.35);margin-top:.25rem;line-height:1.5;}
+
+/* concept definitions */
+.defs{margin:1.9rem 0;}
+.df{border-left:2px solid rgba(13,148,136,.35);padding:.7rem 1.1rem;margin-bottom:.7rem;
+  background:rgba(13,148,136,.04);border-radius:0 4px 4px 0;}
+.df-t{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--teal);font-weight:700;}
+.df-d{font-size:.85rem;color:#4a5568;line-height:1.6;margin-top:.2rem;}
+
+/* comparison table */
+.cmptab{overflow-x:auto;margin:1.9rem 0;}
+table.ct{width:100%;border-collapse:collapse;font-size:.83rem;}
+table.ct th{padding:.6rem .8rem;text-align:left;color:#718096;
+  border-bottom:2px solid #e2ddd8;font-family:'JetBrains Mono',monospace;
+  font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;}
+table.ct td{padding:.6rem .8rem;border-bottom:1px solid #ece8e2;color:#4a5568;line-height:1.5;}
+table.ct td:first-child{font-weight:600;color:var(--tx);}
+table.ct .new{color:var(--teal);font-weight:600;}
+
+/* lock / redacted */
+.lock{border:1px dashed rgba(217,119,6,.45);background:rgba(217,119,6,.05);
+  border-radius:6px;padding:1.6rem 1.4rem;margin:1.9rem 0;text-align:center;}
+.lock-ic{font-size:1.5rem;color:var(--amb);margin-bottom:.7rem;}
+.lock-t{font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--tx);font-weight:700;margin-bottom:.55rem;}
+.lock-d{font-size:.84rem;color:#718096;line-height:1.7;max-width:560px;margin:0 auto;}
+.lock-rows{max-width:540px;margin:1.3rem auto 0;text-align:left;}
+.lr{display:flex;align-items:center;gap:.7rem;padding:.55rem .8rem;
+  border:1px solid rgba(0,0,0,.06);border-radius:4px;margin-bottom:.45rem;background:#fff;}
+.lr i{color:var(--amb);font-size:.72rem;width:14px;}
+.lr-n{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:#4a5568;}
+.lr-r{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  color:var(--amb);letter-spacing:.08em;text-transform:uppercase;}
+
+/* book chapters */
+.book{border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:1.4rem;
+  margin:1.9rem 0;background:rgba(0,229,255,.02);}
+.book-t{font-family:'JetBrains Mono',monospace;font-size:.88rem;color:#e2e8f0;font-weight:700;margin-bottom:.3rem;}
+.book-s{font-size:.8rem;color:rgba(255,255,255,.4);line-height:1.6;}
+
+/* references */
+.refs{margin:1.9rem 0;}
+.ref{border-left:2px solid rgba(13,148,136,.35);padding:.6rem 1rem;margin-bottom:.7rem;
+  background:rgba(13,148,136,.04);border-radius:0 4px 4px 0;}
+.ref a{color:var(--teal);text-decoration:none;font-weight:600;}
+.ref a:hover{text-decoration:underline;}
+.ref-t{font-size:.84rem;color:#4a5568;line-height:1.55;}
+
+/* contact CTA */
+.cta{background:linear-gradient(135deg,rgba(217,119,6,.1),rgba(0,229,255,.05));
+  border:1px solid rgba(217,119,6,.32);border-radius:8px;
+  padding:2.4rem 1.8rem;text-align:center;margin:1rem auto 0;max-width:680px;}
+.cta-t{font-family:'Merriweather',serif;font-size:1.3rem;color:#fff;font-weight:700;margin-bottom:.7rem;}
+.cta-d{font-size:.9rem;color:rgba(255,255,255,.5);line-height:1.75;max-width:520px;margin:0 auto 1.5rem;}
+.cta-btn{display:inline-flex;align-items:center;gap:.55rem;
+  font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:600;
+  background:var(--amb);color:#fff;text-decoration:none;
+  padding:.8rem 1.5rem;border-radius:5px;transition:background .2s,transform .2s;}
+.cta-btn:hover{background:#b45309;transform:translateY(-1px);}
+.cta-note{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.32);margin-top:1rem;}
+
+.rv{opacity:0;transform:translateY(20px);transition:opacity .55s,transform .55s;}
+.rv.vs{opacity:1;transform:translateY(0);}
+
+footer{background:var(--dk);padding:2.8rem 1.5rem;text-align:center;border-top:1px solid rgba(217,119,6,.08);}
+footer p{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.2);}
+footer a{color:rgba(217,119,6,.5);text-decoration:none;}
+footer a:hover{color:var(--amb);}
+
+@media(max-width:600px){
+  .cmp{grid-template-columns:1fr 1fr;}
+  .hs{min-width:80px;padding:.7rem .9rem;}
+  .hs-n{font-size:1.2rem;}
+  .top-nav{padding:.65rem 1rem;}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="research-hub.html" class="tn-back"><i class="fas fa-arrow-left" style="font-size:.68rem;"></i> Research Hub</a>
+  <span class="tn-crumb">Physics &amp; Philosophy &nbsp;/ &nbsp;<em>Paper in progress · 2026</em></span>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hg"></div>
+  <div class="hsw"></div>
+  <div class="brkt tl"></div><div class="brkt tr"></div>
+  <div class="brkt blc"></div><div class="brkt brc"></div>
+
+  <div class="h-eye">Foundations of Physics &nbsp;·&nbsp; Block Universe &nbsp;·&nbsp; 2026</div>
+  <h1>The Worldtube<br>Must Be <em>Real</em></h1>
+  <p class="h-sub">A rock sitting on a table is silent evidence for a radical claim: that the future already exists, fixed, as part of one four-dimensional structure. Not philosophy — measured physics. This is the question the paper asks. Not the full answer.</p>
+
+  <div class="h-stats">
+    <div class="hs"><div class="hs-n">5.8<span style="font-size:.9rem;">ns</span></div><div class="hs-l">Per Year, 1.7m</div></div>
+    <div class="hs"><div class="hs-n">7.6e&minus;21</div><div class="hs-l">Clock Uncertainty</div></div>
+    <div class="hs"><div class="hs-n">1<span style="font-size:.9rem;">cm</span></div><div class="hs-l">Measured Column</div></div>
+    <div class="hs"><div class="hs-n">+38<span style="font-size:.9rem;">µs</span></div><div class="hs-l">GPS / Day</div></div>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- ACT 0 — THE PROVOCATION -->
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-a rv">Act 0 &nbsp;·&nbsp; The Provocation</div>
+  <h2 class="act act-d rv">An ordinary rock holds a philosophical bomb</h2>
+  <p class="bd rv">General relativity predicts — and experiment confirms — that the top of a rock ages faster than its base. Over a single year, the top of a 1.7-metre object accumulates roughly <strong style="color:#fff;">5.8 nanoseconds more real, physical time</strong> than its bottom. This is not a measurement illusion or a coordinate artifact. It is a frame-independent, coordinate-invariant scalar fact.</p>
+  <br>
+  <p class="bd rv">So here is the question the paper turns on: <em>what does it take for the rock to hold together across that temporal gap?</em> The head and the feet are living in slightly different amounts of time. Something has to bind them — and what that something requires of spacetime is where things get strange.</p>
+
+  <div class="fd fd-ad rv">
+    <div class="fdl">Why the title overstates on purpose</div>
+    <div class="fdb">The form deliberately echoes "Attention Is All You Need" — short, declarative, built to provoke argument rather than hedge into being ignored. The argument inside is explicitly conditional. That is stated as a feature, not a weakness.</div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 1 — EMPIRICAL ANCHOR -->
+<div class="bd-dm"></div>
+<section class="s-md">
+<div class="inn">
+  <div class="eye eye-a rv">Act 1 &nbsp;·&nbsp; The Measurement</div>
+  <h2 class="act act-d rv">This is not a thought experiment</h2>
+  <p class="bd rv">In 2022, a JILA / NIST team resolved gravitational time dilation across a <strong style="color:#fff;">1-centimetre vertical column</strong> of ultracold strontium-87 atoms — a measurement of extraordinary precision, with supporting datasets already in everyday use.</p>
+
+  <div class="cmp rv">
+    <div class="cb"><div class="cb-l">JILA / NIST 2022</div><div class="cb-n">1 cm</div><div class="cb-s">Redshift resolved across a millimetre-scale atomic sample</div></div>
+    <div class="cb"><div class="cb-l">GPS satellites</div><div class="cb-n">+38 µs/day</div><div class="cb-s">Required GR correction; without it, ~11 km/day position drift</div></div>
+    <div class="cb"><div class="cb-l">Hafele&ndash;Keating 1971</div><div class="cb-n">~10%</div><div class="cb-s">Airborne cesium clocks matched GR within this margin</div></div>
+    <div class="cb"><div class="cb-l">Gravity Probe B</div><div class="cb-n">✓</div><div class="cb-s">Geodetic precession confirmed GR spacetime geometry</div></div>
+  </div>
+
+  <div class="fd fd-c rv">
+    <div class="fdl">The chain of established facts</div>
+    <div class="fdb">The paper does not introduce new physics. It connects three independently confirmed results: a gravitational gradient exists across any macroscopic body; electromagnetic binding requires a well-defined causal past; and a well-defined causal structure implies a specific global geometry. The novelty is the connection — not the ingredients.</div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 2 — CONCEPTS -->
+<div class="bd-md"></div>
+<section class="s-of">
+<div class="inn">
+  <div class="eye eye-t rv">Act 2 &nbsp;·&nbsp; The Vocabulary</div>
+  <h2 class="act act-w rv">Five ideas, in plain language</h2>
+  <p class="bw rv">No equations required to follow the question. Five terms carry the argument.</p>
+
+  <div class="defs rv">
+    <div class="df"><div class="df-t">Proper time (τ)</div><div class="df-d">The time a physical clock actually measures along its path. A scalar invariant — the same in every frame. Two clocks at different heights accumulate different proper times even if they start and finish at the same place.</div></div>
+    <div class="df"><div class="df-t">Worldtube</div><div class="df-d">The four-dimensional volume a finite-size object sweeps out as it moves through spacetime — the "shadow" a 3D object casts in 4D.</div></div>
+    <div class="df"><div class="df-t">Block universe (eternalism)</div><div class="df-d">Past, present and future all exist equally as parts of one fixed four-dimensional structure. "Now" is a location in it, not a moving boundary.</div></div>
+    <div class="df"><div class="df-t">Growing-block universe</div><div class="df-d">The past and present are real; the future does not yet exist. A "now" boundary divides the real from the not-yet-real.</div></div>
+    <div class="df"><div class="df-t">Presentism</div><div class="df-d">Only the present moment is real. Past and future do not exist.</div></div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 3 — WHAT'S NEW -->
+<div class="bd-ow"></div>
+<section class="s-wm">
+<div class="inn">
+  <div class="eye eye-t rv">Act 3 &nbsp;·&nbsp; The Novelty</div>
+  <h2 class="act act-w rv">Not the old argument in new clothes</h2>
+  <p class="bw rv">The 1960s Rietdijk&ndash;Putnam argument also reached the block universe — but through the relativity of simultaneity, which leaves it open to the conventionality-of-simultaneity objection. This argument takes a different road, using only frame-invariant quantities throughout.</p>
+
+  <div class="cmptab rv">
+    <table class="ct">
+      <thead><tr><th>Feature</th><th>Rietdijk&ndash;Putnam</th><th>This paper</th></tr></thead>
+      <tbody>
+        <tr><td>Core tool</td><td>Relativity of simultaneity</td><td class="new">Causal past / light-cone structure</td></tr>
+        <tr><td>Objects involved</td><td>Two distant observers</td><td class="new">One locally bound object</td></tr>
+        <tr><td>Vulnerable to</td><td>Conventionality of simultaneity</td><td class="new">Not applicable</td></tr>
+        <tr><td>Premise required</td><td>Simultaneity is metaphysically real</td><td class="new">Matter holds together (empirical)</td></tr>
+        <tr><td>Character</td><td>Philosophical</td><td class="new">Physical</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="fd fd-t rv">
+    <div class="fdl">The one-line claim</div>
+    <div class="fdb">For a bound physical object there is no single frame-invariant "now" — the head and the feet disagree, and neither is wrong. The paper argues that the cohesion of bound matter constrains what the ontology of time can be. <em>How</em> and <em>why</em> is the part under peer review.</div>
+  </div>
+</div>
+</section>
+
+<!-- ACT 4 — WITHHELD -->
+<div class="bd-wo"></div>
+<section class="s-of">
+<div class="inn">
+  <div class="eye eye-a rv">Act 4 &nbsp;·&nbsp; What This Page Doesn't Show</div>
+  <h2 class="act act-w rv">The argument itself stays in the paper</h2>
+  <p class="bw rv">This page gives the question and the stakes. The formal chain — the part being submitted for peer review — is deliberately not reproduced here, to avoid pre-empting it.</p>
+
+  <div class="lock rv">
+    <div class="lock-ic"><i class="fas fa-lock"></i></div>
+    <div class="lock-t">Held for the peer-reviewed paper</div>
+    <div class="lock-d">Enough is public to intrigue; the load-bearing logic is not, until it has been through review.</div>
+    <div class="lock-rows">
+      <div class="lr"><i class="fas fa-lock"></i><span class="lr-n">The premises of the Cohesion Constraint, in full</span><span class="lr-r">withheld</span></div>
+      <div class="lr"><i class="fas fa-lock"></i><span class="lr-n">Cohesion → global hyperbolicity → block universe chain</span><span class="lr-r">withheld</span></div>
+      <div class="lr"><i class="fas fa-lock"></i><span class="lr-n">The no-invariant-boundary argument (§4)</span><span class="lr-r">withheld</span></div>
+      <div class="lr"><i class="fas fa-lock"></i><span class="lr-n">Quantum-circuit encoding of the argument</span><span class="lr-r">withheld</span></div>
+    </div>
+  </div>
+
+  <div class="fd fd-a rv">
+    <div class="fdl">Honest status — June 2026</div>
+    <div class="fdb">"The Worldtube Must Be Real" is a paper in progress, targeted at <em>Foundations of Physics</em> (physics.hist-ph · gr-qc). A companion book, <em>The Worldtube for the Curious</em>, walks every equation for a reader with high-school maths. Neither is published yet. When a preprint exists, it will be linked here.</div>
+  </div>
+</div>
+</section>
+
+<!-- COMPANION BOOK + REFS -->
+<div class="bd-ow"></div>
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-a rv">The Companion Book</div>
+  <div class="book rv">
+    <div class="book-t">The Worldtube for the Curious &nbsp;·&nbsp; 9 chapters</div>
+    <div class="book-s">From "time as a coordinate, not a flow" through the Schwarzschild metric, proper time, why your head ages faster than your feet, covariant electromagnetism, retarded Green's functions, and global hyperbolicity — every equation explained from scratch. Ends: <em>"The rock on the table is still there. Now you know what it is."</em></div>
+  </div>
+
+  <div class="eye eye-t rv" style="margin-top:2.5rem;">Real, Checkable References</div>
+  <div class="refs rv">
+    <div class="ref">
+      <a href="https://www.nature.com/articles/s41586-021-04349-7" target="_blank" rel="noopener">Bothwell et al. (2022) — Resolving the gravitational redshift across a millimetre-scale atomic sample</a>
+      <div class="ref-t">Nature 602, 420&ndash;424. The empirical anchor — fractional frequency uncertainty 7.6×10⁻²¹.</div>
+    </div>
+    <div class="ref">
+      <a href="https://doi.org/10.1063/1.1665157" target="_blank" rel="noopener">Geroch, R. (1970) — Domain of dependence</a>
+      <div class="ref-t">J. Math. Phys. 11(2), 437&ndash;449. The splitting theorem linking causal structure to global geometry.</div>
+    </div>
+    <div class="ref">
+      <a href="https://doi.org/10.1007/s00220-003-0982-6" target="_blank" rel="noopener">Bernal &amp; Sánchez (2003) — On smooth Cauchy hypersurfaces and Geroch's splitting theorem</a>
+      <div class="ref-t">Comm. Math. Phys. 243, 461&ndash;470. The modern sharpening of Geroch's result.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- CONTACT CTA -->
+<div class="bd-dm"></div>
+<section class="s-md">
+<div class="inn">
+  <div class="eye eye-a rv" style="text-align:center;">Contact</div>
+  <div class="cta rv">
+    <div class="cta-t">Want to argue with it before it's published?</div>
+    <div class="cta-d">If you're a physicist, philosopher of physics, reviewer, or curious reader who wants the full argument, an objection worth answering, or early access to the companion book — reach the author directly. Disagreement welcome; that's the point of the title.</div>
+    <a class="cta-btn" href="mailto:rahuldeo2047@gmail.com?subject=The%20Worldtube%20Must%20Be%20Real%20%E2%80%94%20inquiry">
+      <i class="fas fa-envelope"></i> Contact the author
+    </a>
+    <div class="cta-note">rahuldeo2047@gmail.com</div>
+  </div>
+</div>
+</section>
+
+<div class="bd-dw"></div>
+
+<footer>
+  <p style="margin-bottom:.45rem;">
+    <a href="research-hub.html">← Research Hub</a> &nbsp;·&nbsp;
+    <a href="https://github.com/rahuldeo2047" target="_blank" rel="noopener">@rahuldeo2047</a> &nbsp;·&nbsp;
+    <a href="mailto:rahuldeo2047@gmail.com">Contact</a>
+  </p>
+  <p style="margin-top:.5rem;">RD2047 Insights &nbsp;·&nbsp; Physics &amp; Philosophy &nbsp;·&nbsp; The Worldtube Must Be Real · 2026</p>
+</footer>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('vs'); });
+}, {threshold: 0.1});
+document.querySelectorAll('.rv').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

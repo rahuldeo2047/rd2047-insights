@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZeroWhip / NeckGuardian — Tendon-Driven Phone Holder Build Log | RD2047 Insights</title>
+<meta name="description" content="Phase 2a: 60% built. 100Hz PID + 250ms YOLO. Post-idle shake: unsolved.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());gtag('config','G-8Y8EYHB278',{anonymize_ip:true});
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('a[href]').forEach(function(l){
+    l.addEventListener('click',function(){
+      var d=l.getAttribute('href')||'unknown';
+      var lb=l.querySelector('h3')?l.querySelector('h3').innerText.trim().slice(0,80):(l.innerText.trim().slice(0,80)||d);
+      gtag('event','link_click',{event_category:'zerowhip',event_label:lb,link_destination:d,page_path:window.location.pathname});
+    });
+  });
+});
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,300;0,700;1,300&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf8f5;--tx:#2d3748;--teal:#0d9488;--amb:#d97706;
+  --dk:#080c14;--md:#0f1824;--term:#0d1117;
+  --cy:#00e5ff;--gn:#3fb950;--rd:#f85149;--bl:#58a6ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+.top-nav{position:fixed;top:0;left:0;right:0;z-index:200;
+  background:rgba(8,12,20,0.96);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(0,229,255,0.09);
+  padding:.65rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.tn-back{font-family:'Space Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.4);
+  text-decoration:none;display:flex;align-items:center;gap:.5rem;transition:color .2s;}
+.tn-back:hover{color:var(--cy);}
+.tn-crumb{font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.22);letter-spacing:.05em;}
+.tn-crumb em{color:var(--cy);font-style:normal;}
+
+.hero{min-height:100vh;background:var(--dk);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:7rem 1.5rem 5rem;position:relative;overflow:hidden;}
+.hg{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,229,255,.032) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.032) 1px,transparent 1px);
+  background-size:54px 54px;}
+@keyframes sweep{0%{transform:translateY(-100%);}100%{transform:translateY(110vh);}}
+.hsw{position:absolute;left:0;right:0;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.28),transparent);
+  animation:sweep 9s linear infinite;}
+.brkt{position:absolute;width:36px;height:36px;border-color:rgba(0,229,255,.2);border-style:solid;}
+.tl{top:5.5rem;left:1.8rem;border-width:2px 0 0 2px;}
+.tr{top:5.5rem;right:1.8rem;border-width:2px 2px 0 0;}
+.bl{bottom:2.5rem;left:1.8rem;border-width:0 0 2px 2px;}
+.br{bottom:2.5rem;right:1.8rem;border-width:0 2px 2px 0;}
+
+.h-eye{font-family:'Space Mono',monospace;font-size:.67rem;color:var(--cy);
+  letter-spacing:.24em;text-transform:uppercase;margin-bottom:1.4rem;
+  opacity:0;animation:fup .5s .2s forwards;}
+.hero h1{font-family:'Merriweather',serif;font-size:clamp(1.9rem,5vw,3.5rem);
+  font-weight:700;color:#fff;line-height:1.1;max-width:800px;
+  opacity:0;animation:fup .6s .4s forwards;}
+.hero h1 em{font-style:normal;color:var(--cy);}
+.h-sub{margin-top:1.4rem;font-size:.97rem;color:rgba(255,255,255,.43);
+  max-width:580px;line-height:1.8;opacity:0;animation:fup .6s .65s forwards;}
+.h-stats{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center;
+  margin-top:2.8rem;opacity:0;animation:fup .6s .9s forwards;}
+.hs{border:1px solid rgba(0,229,255,.11);background:rgba(0,229,255,.04);
+  padding:.85rem 1.3rem;border-radius:4px;text-align:center;min-width:100px;}
+.hs-n{font-family:'Space Mono',monospace;font-size:1.45rem;font-weight:700;
+  color:var(--cy);line-height:1;}
+.hs-l{font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  color:rgba(255,255,255,.28);letter-spacing:.1em;text-transform:uppercase;margin-top:.28rem;}
+.scroll-hint{position:absolute;bottom:1.8rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  color:rgba(255,255,255,.18);font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  letter-spacing:.15em;animation:breathe 2.6s ease-in-out infinite;}
+.scroll-hint::before{content:'';display:block;width:1px;height:32px;
+  background:linear-gradient(to bottom,var(--cy),transparent);}
+@keyframes breathe{0%,100%{opacity:.25;}50%{opacity:.75;}}
+@keyframes fup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.s-dk{background:var(--dk);color:#e2e8f0;}
+.s-md{background:var(--md);color:#e2e8f0;}
+.s-wm{background:var(--bg);color:var(--tx);}
+.s-of{background:#f0ede8;color:var(--tx);}
+section{padding:4.5rem 1.5rem;}
+.bd-dw{height:55px;background:linear-gradient(to bottom,var(--dk),var(--bg));}
+.bd-wd{height:55px;background:linear-gradient(to bottom,var(--bg),var(--dk));}
+.bd-dm{height:35px;background:linear-gradient(to bottom,var(--dk),var(--md));}
+.bd-md{height:35px;background:linear-gradient(to bottom,var(--md),var(--dk));}
+.bd-mw{height:55px;background:linear-gradient(to bottom,var(--md),var(--bg));}
+.bd-wm{height:55px;background:linear-gradient(to bottom,var(--bg),var(--md));}
+.bd-wo{height:35px;background:linear-gradient(to bottom,var(--bg),#f0ede8);}
+.bd-ow{height:35px;background:linear-gradient(to bottom,#f0ede8,var(--bg));}
+.inn{max-width:840px;margin:0 auto;}
+.inn-w{max-width:1040px;margin:0 auto;}
+
+.eye{font-family:'Space Mono',monospace;font-size:.66rem;
+  letter-spacing:.22em;text-transform:uppercase;margin-bottom:.65rem;}
+.eye-c{color:var(--cy);}.eye-t{color:var(--teal);}.eye-a{color:var(--amb);}
+.eye-r{color:var(--rd);}
+h2.act{font-family:'Merriweather',serif;font-size:clamp(1.45rem,3vw,2.15rem);
+  font-weight:700;line-height:1.17;margin-bottom:1.2rem;}
+h2.act-d{color:#fff;}h2.act-w{color:var(--tx);}
+.bd{font-size:.94rem;line-height:1.82;color:rgba(255,255,255,.5);}
+.bw{font-size:.94rem;line-height:1.82;color:#4a5568;}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;
+  background:rgba(255,255,255,.07);padding:.08em .32em;border-radius:3px;}
+
+.fd{border-left:3px solid;padding:.95rem 1.35rem;border-radius:0 4px 4px 0;margin:1.4rem 0;}
+.fd-c{border-color:var(--cy);background:rgba(0,229,255,.05);}
+.fd-c .fdl{color:var(--cy);}.fd-c .fdb{color:rgba(255,255,255,.58);}
+.fd-t{border-color:var(--teal);background:rgba(13,148,136,.06);}
+.fd-t .fdl{color:var(--teal);}.fd-t .fdb{color:#4a5568;}
+.fd-a{border-color:var(--amb);background:rgba(217,119,6,.06);}
+.fd-a .fdl{color:var(--amb);}.fd-a .fdb{color:rgba(255,255,255,.55);}
+.fd-r{border-color:var(--rd);background:rgba(248,81,73,.05);}
+.fd-r .fdl{color:var(--rd);}.fd-r .fdb{color:rgba(255,255,255,.55);}
+.fdl{font-family:'Space Mono',monospace;font-size:.63rem;
+  letter-spacing:.18em;text-transform:uppercase;margin-bottom:.35rem;}
+.fdb{font-size:.87rem;line-height:1.7;}
+
+.iw{overflow-x:auto;margin:1.8rem 0;}
+table.it{width:100%;border-collapse:collapse;
+  font-family:'JetBrains Mono',monospace;font-size:.7rem;}
+table.it th{padding:.5rem .65rem;text-align:left;white-space:nowrap;
+  color:rgba(255,255,255,.28);border-bottom:1px solid rgba(255,255,255,.06);
+  font-weight:400;letter-spacing:.06em;}
+table.it td{padding:.47rem .65rem;border-bottom:1px solid rgba(255,255,255,.04);}
+table.it tr:hover td{background:rgba(0,229,255,.025);}
+.ig{color:var(--gn);}.ir2{color:var(--rd);}.ia{color:var(--amb);}
+.id{color:rgba(255,255,255,.18);}.ic{color:rgba(255,255,255,.52);}
+
+.phase-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:.7rem;margin:1.8rem 0;}
+.ph{border:1px solid;border-radius:4px;padding:.85rem 1rem;text-align:center;}
+.ph-done{background:rgba(63,185,80,.05);border-color:rgba(63,185,80,.22);}
+.ph-active{background:rgba(0,229,255,.05);border-color:rgba(0,229,255,.22);}
+.ph-wait{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.06);}
+.ph-ic{font-size:1.1rem;margin-bottom:.3rem;}
+.ph-nm{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#e2e8f0;font-weight:600;}
+.ph-nt{font-size:.7rem;color:rgba(255,255,255,.32);margin-top:.2rem;}
+
+.fail-list{list-style:none;margin:1.4rem 0;}
+.fail-list li{display:flex;gap:.9rem;padding:.85rem 1.1rem;
+  border:1px solid;border-radius:4px;margin-bottom:.6rem;align-items:flex-start;}
+.fl-dk{background:rgba(248,81,73,.04);border-color:rgba(248,81,73,.15);}
+.fl-am{background:rgba(217,119,6,.05);border-color:rgba(217,119,6,.15);}
+.fl-ic{font-size:1rem;flex-shrink:0;margin-top:.05rem;}
+.fl-nm{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#e2e8f0;font-weight:600;margin-bottom:.22rem;}
+.fl-dt{font-size:.77rem;color:rgba(255,255,255,.38);line-height:1.55;}
+
+.rv{opacity:0;transform:translateY(20px);transition:opacity .55s,transform .55s;}
+.rv.vs{opacity:1;transform:translateY(0);}
+
+footer{background:var(--dk);padding:2.8rem 1.5rem;text-align:center;
+  border-top:1px solid rgba(0,229,255,.07);}
+footer p{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.2);}
+footer a{color:rgba(0,229,255,.42);text-decoration:none;}
+footer a:hover{color:var(--cy);}
+
+@media(max-width:600px){
+  .phase-g{grid-template-columns:repeat(2,1fr);}
+  .hs{min-width:80px;padding:.7rem .9rem;}
+  .hs-n{font-size:1.2rem;}
+  .top-nav{padding:.65rem 1rem;}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="research-hub.html" class="tn-back"><i class="fas fa-arrow-left" style="font-size:.68rem;"></i> Research Hub</a>
+  <span class="tn-crumb">ZeroWhip &nbsp;/ &nbsp;<em>Build Log · Phase 2a</em></span>
+</nav>
+
+<section class="hero">
+  <div class="hg"></div>
+  <div class="hsw"></div>
+  <div class="brkt tl"></div><div class="brkt tr"></div>
+  <div class="brkt bl"></div><div class="brkt br"></div>
+
+  <div class="h-eye">ZeroWhip &nbsp;·&nbsp; NeckGuardian &nbsp;·&nbsp; Build Log 2026</div>
+  <h1>Tendon-Driven<br><em>Phone Holder</em></h1>
+  <p class="h-sub">Shoulder-mounted robotic arm. Brings phone to eye level. Solves tech neck at the hardware layer. Phase 2a: 60% complete. Post-idle oscillation unsolved.</p>
+
+  <div class="h-stats">
+    <div class="hs"><div class="hs-n">100<span style="font-size:.85rem;">Hz</span></div><div class="hs-l">PID Loop</div></div>
+    <div class="hs"><div class="hs-n">0.45<span style="font-size:.85rem;">m</span></div><div class="hs-l">Reach</div></div>
+    <div class="hs"><div class="hs-n">250<span style="font-size:.85rem;">ms</span></div><div class="hs-l">YOLO Latency</div></div>
+    <div class="hs"><div class="hs-n">60<span style="font-size:.85rem;">%</span></div><div class="hs-l">Phase 2a</div></div>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- SECTION 1 -->
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-c rv">Act 1 &nbsp;·&nbsp; The Problem</div>
+  <h2 class="act act-d rv">What is ZeroWhip?</h2>
+  <p class="bd rv">Shoulder-mounted tendon-driven robotic arm that holds a phone at eye level. The engineering thesis: tech neck is a posture problem caused by hardware — phone held below eye line, head bent forward, sustained load on cervical vertebrae. Fix the hardware, fix the posture.</p>
+  <br>
+  <p class="bd rv">String-driven rigid joints. Strings transmit tension from servo motors through a cable routing system to actuate each arm segment. Codename: ZeroWhip. Deployment name: NeckGuardian. The name reflects the clinical objective — neck protection, not just convenience.</p>
+
+  <div class="fd fd-c rv">
+    <div class="fdl">Why tendon-driven?</div>
+    <div class="fdb">Tendon routing moves the actuator mass (servos) to the shoulder mount, keeping the distal arm lightweight. A direct-drive arm of comparable reach would impose unacceptable torque on the shoulder joint. String-driven rigid joints solve both the weight distribution and the actuator placement problem simultaneously.</div>
+  </div>
+
+  <div class="fd fd-a rv">
+    <div class="fdl">Sister projects</div>
+    <div class="fdb">S.H.R.A.V.Y.A (DIY EEG) cross-validates posture-correlated EEG signals. WiFi-HR-Est and Visual-HR are downstream biometric validation layers. ZeroWhip is the physical intervention; the EEG system measures whether it works neurologically.</div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 2 -->
+<div class="bd-dm"></div>
+<section class="s-md">
+<div class="inn">
+  <div class="eye eye-c rv">Act 2 &nbsp;·&nbsp; Build State</div>
+  <h2 class="act act-d rv">Current build state — Phase 2a</h2>
+  <p class="bd rv">Measured values from the actual hardware. Not specs — observations from running code on the bench.</p>
+
+  <div class="iw rv">
+  <table class="it">
+    <thead>
+      <tr><th>Subsystem</th><th>Component / Value</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="ic">MCU</td><td class="id">ESP8266 D1 Mini · ServoEasing 3.6.0 · 50ms ramp</td><td class="ig">✅ Running</td></tr>
+      <tr><td class="ic">PID</td><td class="id">Kp=100 Ki=50 Kd=100 · anti-windup ±20</td><td class="ig">✅ Tuned</td></tr>
+      <tr><td class="ic">IK solver</td><td class="id">0.05m Z floor · 1.4 rad limits · 95% workspace clip</td><td class="ig">✅ Stable</td></tr>
+      <tr><td class="ic">ROS2</td><td class="id">100Hz main loop · 4Hz dashboard</td><td class="ig">✅ Running</td></tr>
+      <tr><td class="ic">Mechanical</td><td class="id">3×15cm tendon = 0.45m reach · 150–200g phone · PETG</td><td class="ig">✅ Built</td></tr>
+      <tr><td class="ic">YOLO inference</td><td class="id">220–350ms latency on-device</td><td class="ia">⚠️ Slow</td></tr>
+      <tr><td class="ic">End-effector accuracy</td><td class="id">—</td><td class="ir2">❌ Not measured</td></tr>
+      <tr><td class="ic">Post-idle oscillation</td><td class="id">~80ms shake on resume</td><td class="ir2">❌ Unsolved</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="fd fd-a rv">
+    <div class="fdl">YOLO latency context</div>
+    <div class="fdb">220–350ms YOLO inference feeds into the deadband filter (10°) then servo command. Total chain latency: approximately 2.5 servo update cycles. Acceptable for slow intentional phone repositioning. Not acceptable for reactive posture correction. The arm currently tracks, it does not anticipate.</div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 3 -->
+<div class="bd-md"></div>
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-r rv">Act 3 &nbsp;·&nbsp; Failure Modes</div>
+  <h2 class="act act-d rv">Known failure modes — honest inventory</h2>
+  <p class="bd rv">Build logs rarely list failures. This one does. Every item below is observed on the physical hardware, not hypothetical.</p>
+
+  <ul class="fail-list rv">
+    <li class="fl-dk">
+      <div class="fl-ic">❌</div>
+      <div>
+        <div class="fl-nm">Post-idle oscillation</div>
+        <div class="fl-dt">~80ms shake when arm resumes from idle. Root cause: integral windup not fully compensated by anti-windup ±20 clamp. The integrator accumulates error during idle; when command resumes, the accumulated integral overshoots before the derivative term catches it. Will check it later — commit <code style="color:rgba(0,229,255,.6);">5afd033</code>.</div>
+      </div>
+    </li>
+    <li class="fl-dk">
+      <div class="fl-ic">❌</div>
+      <div>
+        <div class="fl-nm">End-effector accuracy unmeasured</div>
+        <div class="fl-dt">No ground-truth measurement exists for where the phone actually lands vs. where IK commands it to go. The arm moves, phone ends up somewhere near eye level. The error budget is unknown. This is Phase 2a's most critical gap.</div>
+      </div>
+    </li>
+    <li class="fl-am">
+      <div class="fl-ic">⚠️</div>
+      <div>
+        <div class="fl-nm">Servo latency chain</div>
+        <div class="fl-dt">YOLO 220–350ms → deadband 10° → servo command. Total: ~2.5 servo update cycles at 100Hz. The chain is long enough to introduce perceptible lag at fast head movements. Acceptable for the current use case (phone held stationary) — becomes a problem if the arm needs to track head movement dynamically.</div>
+      </div>
+    </li>
+    <li class="fl-am">
+      <div class="fl-ic">⚠️</div>
+      <div>
+        <div class="fl-nm">Workspace singularities</div>
+        <div class="fl-dt">IK protects against singularities via 95% reach scaling (never commands to full 0.45m extent) + 5mm dead-zone around origin. This avoids divide-by-zero in the IK solver but means ~5% of the theoretical workspace is unreachable by design. Not a problem in practice — the usable envelope is sufficient for phone positioning.</div>
+      </div>
+    </li>
+  </ul>
+</div>
+</section>
+
+<!-- SECTION 4 -->
+<div class="bd-dw"></div>
+<section class="s-wm">
+<div class="inn">
+  <div class="eye eye-t rv">Act 4 &nbsp;·&nbsp; Honest Progress</div>
+  <h2 class="act act-w rv">Where things actually stand</h2>
+  <p class="bw rv">Phase 2a is 60% complete. The mechanical arm is built. PID runs at 100Hz. IK is stable. YOLO sees the phone. Post-idle oscillation exists and is deferred — the commit message read: "After idle time it shakes. Will check it later." That is the honest state of this build.</p>
+
+  <div class="fd fd-t rv">
+    <div class="fdl">Commit 5afd033 — verbatim</div>
+    <div class="fdb" style="font-family:'JetBrains Mono',monospace;font-size:.82rem;">"After idle time it shakes. Will check it later."<br><br>This is what real hardware builds look like. The integral windup issue is understood, the fix is non-trivial, and the build continues on other axes in parallel.</div>
+  </div>
+
+  <div class="phase-g rv">
+    <div class="ph ph-done">
+      <div class="ph-ic">✅</div>
+      <div class="ph-nm">Phase 0</div>
+      <div class="ph-nt">Concept + mount design</div>
+    </div>
+    <div class="ph ph-done">
+      <div class="ph-ic">✅</div>
+      <div class="ph-nm">Phase 1</div>
+      <div class="ph-nt">Basic servo + IK</div>
+    </div>
+    <div class="ph ph-active">
+      <div class="ph-ic">🔄</div>
+      <div class="ph-nm">Phase 2a</div>
+      <div class="ph-nt">60% — PID + YOLO integrated</div>
+    </div>
+    <div class="ph ph-wait">
+      <div class="ph-ic">⏳</div>
+      <div class="ph-nm">Phase 2b</div>
+      <div class="ph-nt">Oscillation fix + accuracy measurement</div>
+    </div>
+    <div class="ph ph-wait">
+      <div class="ph-ic">⏳</div>
+      <div class="ph-nm">Phase 3</div>
+      <div class="ph-nt">Wearable integration</div>
+    </div>
+    <div class="ph ph-wait">
+      <div class="ph-ic">⏳</div>
+      <div class="ph-nm">Phase 4–6</div>
+      <div class="ph-nt">EEG cross-validation + field test</div>
+    </div>
+  </div>
+
+  <div class="fd fd-a rv" style="margin-top:1.2rem;">
+    <div class="fdl">What Phase 2b requires</div>
+    <div class="fdb">Fix the integral windup (integrator reset on idle-to-active transition, or conditional integration). Measure end-effector accuracy with a ruler + camera rig — even rough measurements. These two items gate Phase 3. Phase 3 cannot begin with an unknown error budget.</div>
+  </div>
+</div>
+</section>
+
+<div class="bd-wd"></div>
+
+<footer>
+  <p style="margin-bottom:.45rem;">
+    <a href="research-hub.html">← Research Hub</a> &nbsp;·&nbsp;
+    <a href="https://github.com/rahuldeo2047" target="_blank" rel="noopener">GitHub @rahuldeo2047</a> &nbsp;·&nbsp;
+    <a href="https://www.linkedin.com/in/rahuldeo2047/" target="_blank" rel="noopener">LinkedIn</a>
+  </p>
+  <p style="margin-top:.5rem;">RD2047 Insights &nbsp;·&nbsp; ZeroWhip / NeckGuardian &nbsp;·&nbsp; Build Log 2026</p>
+</footer>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(!e.isIntersecting) return;
+    e.target.classList.add('vs');
+  });
+}, {threshold: 0.1});
+document.querySelectorAll('.rv').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

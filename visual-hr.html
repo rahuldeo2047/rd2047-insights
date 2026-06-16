@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual-HR-Est — Magic-Mirror rPPG | Scaffold | RD2047 Insights</title>
+<meta name="description" content="Multi-face contactless heart rate from RGB camera. Privacy-first. Pre-code scaffold.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());gtag('config','G-8Y8EYHB278',{anonymize_ip:true});
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('a[href]').forEach(function(l){
+    l.addEventListener('click',function(){
+      var d=l.getAttribute('href')||'unknown';
+      var lb=l.querySelector('h3')?l.querySelector('h3').innerText.trim().slice(0,80):(l.innerText.trim().slice(0,80)||d);
+      gtag('event','link_click',{event_category:'visual_hr',event_label:lb,link_destination:d,page_path:window.location.pathname});
+    });
+  });
+});
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,300;0,700;1,300&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf8f5;--tx:#2d3748;--teal:#0d9488;--amb:#d97706;
+  --dk:#080c14;--md:#0f1824;--term:#0d1117;
+  --cy:#00e5ff;--gn:#3fb950;--rd:#f85149;--bl:#58a6ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+.top-nav{position:fixed;top:0;left:0;right:0;z-index:200;
+  background:rgba(8,12,20,0.96);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(0,229,255,0.09);
+  padding:.65rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.tn-back{font-family:'Space Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.4);
+  text-decoration:none;display:flex;align-items:center;gap:.5rem;transition:color .2s;}
+.tn-back:hover{color:var(--cy);}
+.tn-crumb{font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.22);letter-spacing:.05em;}
+.tn-crumb em{color:var(--cy);font-style:normal;}
+
+.hero{min-height:100vh;background:var(--dk);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:7rem 1.5rem 5rem;position:relative;overflow:hidden;}
+.hg{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,229,255,.032) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.032) 1px,transparent 1px);
+  background-size:54px 54px;}
+@keyframes sweep{0%{transform:translateY(-100%);}100%{transform:translateY(110vh);}}
+.hsw{position:absolute;left:0;right:0;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.28),transparent);
+  animation:sweep 9s linear infinite;}
+.brkt{position:absolute;width:36px;height:36px;border-color:rgba(0,229,255,.2);border-style:solid;}
+.tl{top:5.5rem;left:1.8rem;border-width:2px 0 0 2px;}
+.tr{top:5.5rem;right:1.8rem;border-width:2px 2px 0 0;}
+.bl{bottom:2.5rem;left:1.8rem;border-width:0 0 2px 2px;}
+.br{bottom:2.5rem;right:1.8rem;border-width:0 2px 2px 0;}
+
+.h-eye{font-family:'Space Mono',monospace;font-size:.67rem;color:var(--cy);
+  letter-spacing:.24em;text-transform:uppercase;margin-bottom:1.4rem;
+  opacity:0;animation:fup .5s .2s forwards;}
+.hero h1{font-family:'Merriweather',serif;font-size:clamp(1.9rem,5vw,3.5rem);
+  font-weight:700;color:#fff;line-height:1.1;max-width:800px;
+  opacity:0;animation:fup .6s .4s forwards;}
+.hero h1 em{font-style:normal;color:var(--cy);}
+.h-sub{margin-top:1.4rem;font-size:.97rem;color:rgba(255,255,255,.43);
+  max-width:580px;line-height:1.8;opacity:0;animation:fup .6s .65s forwards;}
+.h-stats{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center;
+  margin-top:2.8rem;opacity:0;animation:fup .6s .9s forwards;}
+.hs{border:1px solid rgba(0,229,255,.11);background:rgba(0,229,255,.04);
+  padding:.85rem 1.3rem;border-radius:4px;text-align:center;min-width:100px;}
+.hs-n{font-family:'Space Mono',monospace;font-size:1.45rem;font-weight:700;
+  color:var(--cy);line-height:1;}
+.hs-l{font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  color:rgba(255,255,255,.28);letter-spacing:.1em;text-transform:uppercase;margin-top:.28rem;}
+.scroll-hint{position:absolute;bottom:1.8rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  color:rgba(255,255,255,.18);font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  letter-spacing:.15em;animation:breathe 2.6s ease-in-out infinite;}
+.scroll-hint::before{content:'';display:block;width:1px;height:32px;
+  background:linear-gradient(to bottom,var(--cy),transparent);}
+@keyframes breathe{0%,100%{opacity:.25;}50%{opacity:.75;}}
+@keyframes fup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.s-dk{background:var(--dk);color:#e2e8f0;}
+.s-md{background:var(--md);color:#e2e8f0;}
+.s-wm{background:var(--bg);color:var(--tx);}
+.s-of{background:#f0ede8;color:var(--tx);}
+section{padding:4.5rem 1.5rem;}
+.bd-dw{height:55px;background:linear-gradient(to bottom,var(--dk),var(--bg));}
+.bd-wd{height:55px;background:linear-gradient(to bottom,var(--bg),var(--dk));}
+.bd-dm{height:35px;background:linear-gradient(to bottom,var(--dk),var(--md));}
+.bd-md{height:35px;background:linear-gradient(to bottom,var(--md),var(--dk));}
+.bd-mw{height:55px;background:linear-gradient(to bottom,var(--md),var(--bg));}
+.bd-wo{height:35px;background:linear-gradient(to bottom,var(--bg),#f0ede8);}
+.bd-ow{height:35px;background:linear-gradient(to bottom,#f0ede8,var(--bg));}
+.inn{max-width:840px;margin:0 auto;}
+.inn-w{max-width:1040px;margin:0 auto;}
+
+.eye{font-family:'Space Mono',monospace;font-size:.66rem;
+  letter-spacing:.22em;text-transform:uppercase;margin-bottom:.65rem;}
+.eye-c{color:var(--cy);}.eye-t{color:var(--teal);}.eye-a{color:var(--amb);}.eye-r{color:var(--rd);}
+h2.act{font-family:'Merriweather',serif;font-size:clamp(1.45rem,3vw,2.15rem);
+  font-weight:700;line-height:1.17;margin-bottom:1.2rem;}
+h2.act-d{color:#fff;}h2.act-w{color:var(--tx);}
+.bd{font-size:.94rem;line-height:1.82;color:rgba(255,255,255,.5);}
+.bw{font-size:.94rem;line-height:1.82;color:#4a5568;}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;
+  background:rgba(255,255,255,.07);padding:.08em .32em;border-radius:3px;}
+
+.fd{border-left:3px solid;padding:.95rem 1.35rem;border-radius:0 4px 4px 0;margin:1.4rem 0;}
+.fd-c{border-color:var(--cy);background:rgba(0,229,255,.05);}
+.fd-c .fdl{color:var(--cy);}.fd-c .fdb{color:rgba(255,255,255,.58);}
+.fd-t{border-color:var(--teal);background:rgba(13,148,136,.06);}
+.fd-t .fdl{color:var(--teal);}.fd-t .fdb{color:#4a5568;}
+.fd-a{border-color:var(--amb);background:rgba(217,119,6,.06);}
+.fd-a .fdl{color:var(--amb);}.fd-a .fdb{color:rgba(255,255,255,.55);}
+.fd-r{border-color:var(--rd);background:rgba(248,81,73,.05);}
+.fd-r .fdl{color:var(--rd);}.fd-r .fdb{color:rgba(255,255,255,.55);}
+.fdl{font-family:'Space Mono',monospace;font-size:.63rem;
+  letter-spacing:.18em;text-transform:uppercase;margin-bottom:.35rem;}
+.fdb{font-size:.87rem;line-height:1.7;}
+
+.iw{overflow-x:auto;margin:1.8rem 0;}
+table.it{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:.7rem;}
+table.it th{padding:.5rem .65rem;text-align:left;white-space:nowrap;
+  color:rgba(255,255,255,.28);border-bottom:1px solid rgba(255,255,255,.06);font-weight:400;letter-spacing:.06em;}
+table.it td{padding:.47rem .65rem;border-bottom:1px solid rgba(255,255,255,.04);}
+table.it tr:hover td{background:rgba(0,229,255,.025);}
+.ig{color:var(--gn);}.ir2{color:var(--rd);}.ia{color:var(--amb);}
+.id{color:rgba(255,255,255,.18);}.ic{color:rgba(255,255,255,.52);}
+
+.priv-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:.8rem;margin:1.8rem 0;}
+.priv{border:1px solid rgba(63,185,80,.18);background:rgba(63,185,80,.04);
+  border-radius:4px;padding:.9rem 1rem;}
+.priv-ic{font-size:1rem;margin-bottom:.32rem;}
+.priv-nm{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#e2e8f0;font-weight:600;margin-bottom:.2rem;}
+.priv-dt{font-size:.73rem;color:rgba(255,255,255,.35);line-height:1.5;}
+
+.algo-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:.8rem;margin:1.8rem 0;}
+.algo{border:1px solid rgba(255,255,255,.07);border-radius:4px;padding:.9rem 1rem;
+  background:rgba(255,255,255,.02);}
+.algo.algo-primary{border-color:rgba(0,229,255,.2);background:rgba(0,229,255,.04);}
+.algo-tag{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:.28rem;}
+.algo-tag.at-primary{color:var(--cy);}
+.algo-tag.at-secondary{color:var(--teal);}
+.algo-tag.at-tertiary{color:rgba(255,255,255,.3);}
+.algo-nm{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#e2e8f0;font-weight:600;margin-bottom:.2rem;}
+.algo-dt{font-size:.73rem;color:rgba(255,255,255,.35);line-height:1.5;}
+
+.pipeline-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:1rem 0;}
+.p-box{font-family:'JetBrains Mono',monospace;font-size:.7rem;
+  padding:.35rem .7rem;border:1px solid rgba(0,229,255,.2);border-radius:3px;
+  background:rgba(0,229,255,.04);color:rgba(255,255,255,.65);}
+.p-box.p-dim{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.02);
+  color:rgba(255,255,255,.32);}
+.p-arr{color:rgba(0,229,255,.3);font-size:.8rem;}
+
+.scaffold-banner{background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.2);
+  border-radius:6px;padding:1.4rem 1.6rem;margin:2rem 0;text-align:center;}
+.sb-label{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.2em;
+  color:var(--rd);text-transform:uppercase;margin-bottom:.5rem;}
+.sb-text{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:rgba(255,255,255,.45);line-height:1.65;}
+
+.rv{opacity:0;transform:translateY(20px);transition:opacity .55s,transform .55s;}
+.rv.vs{opacity:1;transform:translateY(0);}
+
+footer{background:var(--dk);padding:2.8rem 1.5rem;text-align:center;
+  border-top:1px solid rgba(0,229,255,.07);}
+footer p{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.2);}
+footer a{color:rgba(0,229,255,.42);text-decoration:none;}
+footer a:hover{color:var(--cy);}
+
+@media(max-width:600px){
+  .priv-g,.algo-g{grid-template-columns:1fr;}
+  .hs{min-width:80px;padding:.7rem .9rem;}
+  .hs-n{font-size:1.2rem;}
+  .top-nav{padding:.65rem 1rem;}
+  .pipeline-row{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="research-hub.html" class="tn-back"><i class="fas fa-arrow-left" style="font-size:.68rem;"></i> Research Hub</a>
+  <span class="tn-crumb">Visual-HR-Est &nbsp;/ &nbsp;<em>rPPG Scaffold · 2026</em></span>
+</nav>
+
+<section class="hero">
+  <div class="hg"></div>
+  <div class="hsw"></div>
+  <div class="brkt tl"></div><div class="brkt tr"></div>
+  <div class="brkt bl"></div><div class="brkt br"></div>
+
+  <div class="h-eye">Visual-HR-Est &nbsp;·&nbsp; Magic-Mirror rPPG &nbsp;·&nbsp; Scaffold</div>
+  <h1>Contactless Heart Rate<br>from <em>RGB Camera</em></h1>
+  <p class="h-sub">Multi-face rPPG from a single camera. Magic-mirror form factor. Privacy-first architecture. Target: ±2 BPM MAE. Current status: scaffold only — no code written yet.</p>
+
+  <div class="h-stats">
+    <div class="hs"><div class="hs-n" style="font-size:1.1rem;">rPPG</div><div class="hs-l">Method</div></div>
+    <div class="hs"><div class="hs-n">±2<span style="font-size:.75rem;">BPM</span></div><div class="hs-l">Target MAE</div></div>
+    <div class="hs"><div class="hs-n">30<span style="font-size:.75rem;">fps</span></div><div class="hs-l">Camera Target</div></div>
+    <div class="hs"><div class="hs-n" style="font-size:.9rem;">Scaffold</div><div class="hs-l">Status</div></div>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- SECTION 1 -->
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-c rv">Act 1 &nbsp;·&nbsp; The Concept</div>
+  <h2 class="act act-d rv">What is Visual-HR-Est?</h2>
+  <p class="bd rv">Multi-face contactless heart rate estimation from a single RGB camera. Remote photoplethysmography (rPPG) / Eulerian magnification. The camera detects subtle skin-color changes caused by blood pulsing through facial vessels — imperceptible to the eye, measurable in the pixel-level signal.</p>
+  <br>
+  <p class="bd rv">Magic-mirror form factor: semi-transparent mirror glass over a display. Camera sits behind the mirror. The subject sees their reflection and a BPM overlay simultaneously. No wearable, no contact. Target accuracy: ±2 BPM MAE — medical-grade devices are typically ±3 BPM.</p>
+
+  <div class="fd fd-c rv">
+    <div class="fdl">Why ±2 BPM?</div>
+    <div class="fdb">Medical-grade pulse oximeters (FDA Class II) specify ±2–3 BPM. Best published rPPG systems (CHROM, POS) achieve 2–5 BPM MAE in controlled lighting with one subject. Multi-face simultaneous measurement in uncontrolled lighting pushes the error higher. ±2 BPM is the target, not the expected outcome. If ±5 BPM is achieved, that is still useful and honest.</div>
+  </div>
+
+  <div class="fd fd-a rv">
+    <div class="fdl">Why build this after WiFi-HR-Est?</div>
+    <div class="fdb">WiFi-HR-Est is the privacy-first path — RF sensing, no image data. Visual-HR-Est is the higher-accuracy path — rPPG has better published validation than CSI-HR. The two systems cross-validate each other. Operator decision: build Visual-HR-Est after WiFi-HR validation gap is closed. Starting from scaffold now.</div>
+  </div>
+
+  <div class="scaffold-banner rv">
+    <div class="sb-label">Current Status — Scaffold Only</div>
+    <div class="sb-text">This project was created on 2026-05-10 as a design document.<br>No code has been written. No hardware has been purchased.<br>This page describes the planned design. Nothing described below is implemented.</div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 2 -->
+<div class="bd-dm"></div>
+<section class="s-md">
+<div class="inn">
+  <div class="eye eye-r rv">Act 2 &nbsp;·&nbsp; Privacy Posture</div>
+  <h2 class="act act-d rv">Privacy — non-negotiable constraints</h2>
+  <p class="bd rv">A camera-based biometric system has one legitimate path to deployment: explicit consent, minimal data footprint, and full local processing. These are not features — they are requirements. Any implementation that does not satisfy all five constraints does not ship.</p>
+
+  <div class="priv-g rv">
+    <div class="priv">
+      <div class="priv-ic">🚫</div>
+      <div class="priv-nm">No frame egress</div>
+      <div class="priv-dt">No image or video data leaves the device. All processing is on-device (RPi5 + Hailo). No cloud inference, no remote logging of frames.</div>
+    </div>
+    <div class="priv">
+      <div class="priv-ic">✅</div>
+      <div class="priv-nm">Opt-in only</div>
+      <div class="priv-dt">Visible LED indicator when camera is active. System does not operate without explicit opt-in. Indicator is hardware-level, not software-controlled.</div>
+    </div>
+    <div class="priv">
+      <div class="priv-ic">🔢</div>
+      <div class="priv-nm">Anonymous IDs only</div>
+      <div class="priv-dt">Subjects identified by unsigned integer session IDs only. No name, no face embedding stored, no identity linkage. ID resets each session.</div>
+    </div>
+    <div class="priv">
+      <div class="priv-ic">🌫️</div>
+      <div class="priv-nm">Auto-blur option</div>
+      <div class="priv-dt">Optional: faces blurred in any local debug display. ROI coordinates extracted but raw frames discarded after ROI extraction.</div>
+    </div>
+    <div class="priv">
+      <div class="priv-ic">📋</div>
+      <div class="priv-nm">On-device audit log</div>
+      <div class="priv-dt">Local log of session start/end timestamps and subject count (no BPM values logged by default). Operator-readable only.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 3 -->
+<div class="bd-md"></div>
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-c rv">Act 3 &nbsp;·&nbsp; Hardware Plan</div>
+  <h2 class="act act-d rv">Planned hardware — not purchased</h2>
+
+  <div class="iw rv">
+  <table class="it">
+    <thead>
+      <tr><th>Component</th><th>Option A</th><th>Option B</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="ic">Camera</td><td class="id">RPi HQ Camera (12.3MP IMX477)</td><td class="id">USB UVC 1080p60</td><td class="ia">⏳ Not purchased</td></tr>
+      <tr><td class="ic">Compute</td><td class="id">RPi 5 (8GB)</td><td class="id">RPi 5 + Hailo-8L stick</td><td class="ia">⏳ RPi5 available; Hailo-8L not</td></tr>
+      <tr><td class="ic">Display / frame</td><td class="id">24" mirror-glass overlay</td><td class="id">—</td><td class="ia">⏳ Not sourced</td></tr>
+      <tr><td class="ic">NIR illuminator</td><td class="id">850nm flood, 10–20W</td><td class="id">Optional — improves low-light</td><td class="ia">⏳ Not purchased</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="fd fd-a rv">
+    <div class="fdl">Hailo-8L rationale</div>
+    <div class="fdb">RetinaFace or YuNet face detection at 30fps is feasible on RPi5 CPU. The Hailo-8L (13 TOPS) accelerates it and frees CPU for rPPG signal processing. The Hailo-10H (40 TOPS) on the edge-AI rig is the proven platform — the 8L is the more cost-appropriate choice for a dedicated mirror device. Decision deferred until after WiFi-HR validation.</div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 4 -->
+<div class="bd-dw"></div>
+<section class="s-wm">
+<div class="inn">
+  <div class="eye eye-t rv">Act 4 &nbsp;·&nbsp; Algorithm Roadmap</div>
+  <h2 class="act act-w rv">Planned algorithm evaluation order</h2>
+  <p class="bw rv">Four algorithms in evaluation order. Classical methods first — deep learning only if classical ceiling is met. Evaluate on single-face controlled before attempting multi-face.</p>
+
+  <div class="algo-g rv">
+    <div class="algo algo-primary">
+      <div class="algo-tag at-primary">EVALUATE FIRST</div>
+      <div class="algo-nm">POS (Wang 2017)</div>
+      <div class="algo-dt">Plane Orthogonal to Skin — current SOTA reference for classical rPPG. Handles illumination changes better than CHROM in theory. Scikit-bio / custom implementation.</div>
+    </div>
+    <div class="algo algo-primary">
+      <div class="algo-tag at-primary">EVALUATE SECOND</div>
+      <div class="algo-nm">CHROM (de Haan 2013)</div>
+      <div class="algo-dt">Chrominance-based. Robust to motion. Most-cited classical method. Published MAE: 2–4 BPM in controlled conditions. The comparison baseline.</div>
+    </div>
+    <div class="algo">
+      <div class="algo-tag at-secondary">EVALUATE THIRD</div>
+      <div class="algo-nm">Eulerian Video Magnification</div>
+      <div class="algo-dt">MIT Wu 2012. Temporal color magnification. Strong visual demo value. Not necessarily the most accurate. Useful for explaining the concept publicly.</div>
+    </div>
+    <div class="algo">
+      <div class="algo-tag at-tertiary">ONLY IF NEEDED</div>
+      <div class="algo-nm">Deep-rPPG</div>
+      <div class="algo-dt">DeepPhys, PhysNet, RhythmNet. Deploy only if classical methods don't reach ±5 BPM MAE in multi-face scenario. Training data requirements are non-trivial.</div>
+    </div>
+  </div>
+
+  <div class="fd fd-t rv">
+    <div class="fdl">Planned pipeline (not implemented)</div>
+    <div class="fdb">
+      <div class="pipeline-row">
+        <span class="p-box p-dim">camera</span>
+        <span class="p-arr">→</span>
+        <span class="p-box p-dim">face detect (RetinaFace/YuNet)</span>
+        <span class="p-arr">→</span>
+        <span class="p-box p-dim">forehead+cheek ROIs</span>
+        <span class="p-arr">→</span>
+        <span class="p-box p-dim">POS algorithm</span>
+        <span class="p-arr">→</span>
+        <span class="p-box p-dim">BPM</span>
+        <span class="p-arr">→</span>
+        <span class="p-box p-dim">privacy gate</span>
+        <span class="p-arr">→</span>
+        <span class="p-box p-dim">display overlay</span>
+      </div>
+      All boxes are planned, not implemented. The privacy gate sits between BPM computation and display — BPM only shown if consent flag is set.
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 5 -->
+<div class="bd-wo"></div>
+<section class="s-of">
+<div class="inn">
+  <div class="eye eye-a rv">Act 5 &nbsp;·&nbsp; Status</div>
+  <h2 class="act act-w rv">Scaffold only — build gate defined</h2>
+  <p class="bw rv">This project is a design document. The build gate is explicit: rebuild begins after WiFi-HR-Est validation gap is closed (Bland-Altman study against PPG ground truth, N ≥ 10 subjects).</p>
+
+  <div class="fd fd-a rv">
+    <div class="fdl">Build gate</div>
+    <div class="fdb">Visual-HR-Est implementation starts when WiFi-HR-Est has a Bland-Altman result (even a disappointing one). The two systems are designed to cross-validate. Running both in parallel would make the cross-validation analysis ambiguous. WiFi-HR goes first, produces a measured MAE, then Visual-HR provides the comparison point.</div>
+  </div>
+
+  <div class="fd fd-t rv">
+    <div class="fdl">Created 2026-05-10</div>
+    <div class="fdb">Page created to document the design intent before implementation. All hardware, algorithms, and pipeline stages described here are planned. This is the honest starting point. When code is written, this page will be updated to reflect actual implementation state.</div>
+  </div>
+</div>
+</section>
+
+<div class="bd-ow"></div>
+<div class="bd-wd"></div>
+
+<footer>
+  <p style="margin-bottom:.45rem;">
+    <a href="research-hub.html">← Research Hub</a> &nbsp;·&nbsp;
+    <a href="https://github.com/rahuldeo2047" target="_blank" rel="noopener">GitHub @rahuldeo2047</a> &nbsp;·&nbsp;
+    <a href="https://www.linkedin.com/in/rahuldeo2047/" target="_blank" rel="noopener">LinkedIn</a>
+  </p>
+  <p style="margin-top:.5rem;">RD2047 Insights &nbsp;·&nbsp; Visual-HR-Est &nbsp;·&nbsp; rPPG Scaffold 2026</p>
+</footer>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(!e.isIntersecting) return;
+    e.target.classList.add('vs');
+  });
+}, {threshold: 0.1});
+document.querySelectorAll('.rv').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

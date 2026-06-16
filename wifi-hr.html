@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiFi-HR-Est — Contactless Heart Rate via CSI | Build Log | RD2047 Insights</title>
+<meta name="description" content="ESP32-S3 CSI pipeline. DSP correct. Validation: zero subjects.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());gtag('config','G-8Y8EYHB278',{anonymize_ip:true});
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('a[href]').forEach(function(l){
+    l.addEventListener('click',function(){
+      var d=l.getAttribute('href')||'unknown';
+      var lb=l.querySelector('h3')?l.querySelector('h3').innerText.trim().slice(0,80):(l.innerText.trim().slice(0,80)||d);
+      gtag('event','link_click',{event_category:'wifi_hr',event_label:lb,link_destination:d,page_path:window.location.pathname});
+    });
+  });
+});
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,300;0,700;1,300&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf8f5;--tx:#2d3748;--teal:#0d9488;--amb:#d97706;
+  --dk:#080c14;--md:#0f1824;--term:#0d1117;
+  --cy:#00e5ff;--gn:#3fb950;--rd:#f85149;--bl:#58a6ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+.top-nav{position:fixed;top:0;left:0;right:0;z-index:200;
+  background:rgba(8,12,20,0.96);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(0,229,255,0.09);
+  padding:.65rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.tn-back{font-family:'Space Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.4);
+  text-decoration:none;display:flex;align-items:center;gap:.5rem;transition:color .2s;}
+.tn-back:hover{color:var(--cy);}
+.tn-crumb{font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.22);letter-spacing:.05em;}
+.tn-crumb em{color:var(--cy);font-style:normal;}
+
+.hero{min-height:100vh;background:var(--dk);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:7rem 1.5rem 5rem;position:relative;overflow:hidden;}
+.hg{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,229,255,.032) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.032) 1px,transparent 1px);
+  background-size:54px 54px;}
+@keyframes sweep{0%{transform:translateY(-100%);}100%{transform:translateY(110vh);}}
+.hsw{position:absolute;left:0;right:0;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.28),transparent);
+  animation:sweep 9s linear infinite;}
+.brkt{position:absolute;width:36px;height:36px;border-color:rgba(0,229,255,.2);border-style:solid;}
+.tl{top:5.5rem;left:1.8rem;border-width:2px 0 0 2px;}
+.tr{top:5.5rem;right:1.8rem;border-width:2px 2px 0 0;}
+.bl{bottom:2.5rem;left:1.8rem;border-width:0 0 2px 2px;}
+.br{bottom:2.5rem;right:1.8rem;border-width:0 2px 2px 0;}
+
+.h-eye{font-family:'Space Mono',monospace;font-size:.67rem;color:var(--cy);
+  letter-spacing:.24em;text-transform:uppercase;margin-bottom:1.4rem;
+  opacity:0;animation:fup .5s .2s forwards;}
+.hero h1{font-family:'Merriweather',serif;font-size:clamp(1.9rem,5vw,3.5rem);
+  font-weight:700;color:#fff;line-height:1.1;max-width:800px;
+  opacity:0;animation:fup .6s .4s forwards;}
+.hero h1 em{font-style:normal;color:var(--cy);}
+.h-sub{margin-top:1.4rem;font-size:.97rem;color:rgba(255,255,255,.43);
+  max-width:580px;line-height:1.8;opacity:0;animation:fup .6s .65s forwards;}
+.h-stats{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center;
+  margin-top:2.8rem;opacity:0;animation:fup .6s .9s forwards;}
+.hs{border:1px solid rgba(0,229,255,.11);background:rgba(0,229,255,.04);
+  padding:.85rem 1.3rem;border-radius:4px;text-align:center;min-width:100px;}
+.hs-n{font-family:'Space Mono',monospace;font-size:1.45rem;font-weight:700;
+  color:var(--cy);line-height:1;}
+.hs-l{font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  color:rgba(255,255,255,.28);letter-spacing:.1em;text-transform:uppercase;margin-top:.28rem;}
+.scroll-hint{position:absolute;bottom:1.8rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  color:rgba(255,255,255,.18);font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  letter-spacing:.15em;animation:breathe 2.6s ease-in-out infinite;}
+.scroll-hint::before{content:'';display:block;width:1px;height:32px;
+  background:linear-gradient(to bottom,var(--cy),transparent);}
+@keyframes breathe{0%,100%{opacity:.25;}50%{opacity:.75;}}
+@keyframes fup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.s-dk{background:var(--dk);color:#e2e8f0;}
+.s-md{background:var(--md);color:#e2e8f0;}
+.s-wm{background:var(--bg);color:var(--tx);}
+.s-of{background:#f0ede8;color:var(--tx);}
+section{padding:4.5rem 1.5rem;}
+.bd-dw{height:55px;background:linear-gradient(to bottom,var(--dk),var(--bg));}
+.bd-wd{height:55px;background:linear-gradient(to bottom,var(--bg),var(--dk));}
+.bd-dm{height:35px;background:linear-gradient(to bottom,var(--dk),var(--md));}
+.bd-md{height:35px;background:linear-gradient(to bottom,var(--md),var(--dk));}
+.bd-mw{height:55px;background:linear-gradient(to bottom,var(--md),var(--bg));}
+.bd-wo{height:35px;background:linear-gradient(to bottom,var(--bg),#f0ede8);}
+.bd-ow{height:35px;background:linear-gradient(to bottom,#f0ede8,var(--bg));}
+.inn{max-width:840px;margin:0 auto;}
+.inn-w{max-width:1040px;margin:0 auto;}
+
+.eye{font-family:'Space Mono',monospace;font-size:.66rem;
+  letter-spacing:.22em;text-transform:uppercase;margin-bottom:.65rem;}
+.eye-c{color:var(--cy);}.eye-t{color:var(--teal);}.eye-a{color:var(--amb);}.eye-r{color:var(--rd);}
+h2.act{font-family:'Merriweather',serif;font-size:clamp(1.45rem,3vw,2.15rem);
+  font-weight:700;line-height:1.17;margin-bottom:1.2rem;}
+h2.act-d{color:#fff;}h2.act-w{color:var(--tx);}
+.bd{font-size:.94rem;line-height:1.82;color:rgba(255,255,255,.5);}
+.bw{font-size:.94rem;line-height:1.82;color:#4a5568;}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;
+  background:rgba(255,255,255,.07);padding:.08em .32em;border-radius:3px;}
+
+.fd{border-left:3px solid;padding:.95rem 1.35rem;border-radius:0 4px 4px 0;margin:1.4rem 0;}
+.fd-c{border-color:var(--cy);background:rgba(0,229,255,.05);}
+.fd-c .fdl{color:var(--cy);}.fd-c .fdb{color:rgba(255,255,255,.58);}
+.fd-t{border-color:var(--teal);background:rgba(13,148,136,.06);}
+.fd-t .fdl{color:var(--teal);}.fd-t .fdb{color:#4a5568;}
+.fd-a{border-color:var(--amb);background:rgba(217,119,6,.06);}
+.fd-a .fdl{color:var(--amb);}.fd-a .fdb{color:rgba(255,255,255,.55);}
+.fd-r{border-color:var(--rd);background:rgba(248,81,73,.05);}
+.fd-r .fdl{color:var(--rd);}.fd-r .fdb{color:rgba(255,255,255,.55);}
+.fdl{font-family:'Space Mono',monospace;font-size:.63rem;
+  letter-spacing:.18em;text-transform:uppercase;margin-bottom:.35rem;}
+.fdb{font-size:.87rem;line-height:1.7;}
+
+.trm{background:var(--term);border:1px solid rgba(0,229,255,.11);
+  border-radius:6px;overflow:hidden;margin:1.8rem 0;}
+.trm-bar{background:#161b22;padding:.5rem 1rem;display:flex;align-items:center;gap:.38rem;
+  border-bottom:1px solid rgba(255,255,255,.05);}
+.dot{width:9px;height:9px;border-radius:50%;}
+.tfn{font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  color:rgba(255,255,255,.26);margin-left:.55rem;letter-spacing:.04em;}
+.tb{padding:1.1rem 1.35rem;font-family:'JetBrains Mono',monospace;
+  font-size:.75rem;line-height:1.75;color:#8b949e;}
+.tc{color:var(--cy);}.tg{color:var(--gn);}.tr2{color:var(--rd);}
+.ta{color:var(--amb);}.tbb{color:var(--bl);}.td{color:rgba(255,255,255,.17);}
+.tp{color:rgba(255,255,255,.5);}
+
+.cap-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:.8rem;margin:1.8rem 0;}
+.cp{border:1px solid;border-radius:4px;padding:.9rem 1rem;}
+.cp-ok{background:rgba(63,185,80,.05);border-color:rgba(63,185,80,.22);}
+.cp-no{background:rgba(248,81,73,.04);border-color:rgba(248,81,73,.18);}
+.cp-wn{background:rgba(217,119,6,.05);border-color:rgba(217,119,6,.18);}
+.cp-ic{font-size:.95rem;margin-bottom:.35rem;}
+.cp-nm{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#e2e8f0;font-weight:600;}
+.cp-nt{font-size:.73rem;color:rgba(255,255,255,.35);margin-top:.22rem;line-height:1.48;}
+
+.pipeline-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:1rem 0;}
+.p-box{font-family:'JetBrains Mono',monospace;font-size:.7rem;
+  padding:.35rem .7rem;border:1px solid rgba(0,229,255,.2);border-radius:3px;
+  background:rgba(0,229,255,.04);color:rgba(255,255,255,.65);}
+.p-arr{color:rgba(0,229,255,.3);font-size:.8rem;}
+
+.road-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.7rem;margin:1.8rem 0;}
+.road{border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:.85rem 1rem;
+  background:rgba(255,255,255,.02);}
+.road-ic{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(0,229,255,.5);
+  letter-spacing:.08em;margin-bottom:.35rem;}
+.road-nm{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#e2e8f0;font-weight:600;margin-bottom:.2rem;}
+.road-dt{font-size:.74rem;color:rgba(255,255,255,.32);line-height:1.5;}
+
+.rv{opacity:0;transform:translateY(20px);transition:opacity .55s,transform .55s;}
+.rv.vs{opacity:1;transform:translateY(0);}
+
+footer{background:var(--dk);padding:2.8rem 1.5rem;text-align:center;
+  border-top:1px solid rgba(0,229,255,.07);}
+footer p{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.2);}
+footer a{color:rgba(0,229,255,.42);text-decoration:none;}
+footer a:hover{color:var(--cy);}
+
+@media(max-width:600px){
+  .cap-g,.road-g{grid-template-columns:1fr;}
+  .hs{min-width:80px;padding:.7rem .9rem;}
+  .hs-n{font-size:1.2rem;}
+  .top-nav{padding:.65rem 1rem;}
+  .pipeline-row{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="research-hub.html" class="tn-back"><i class="fas fa-arrow-left" style="font-size:.68rem;"></i> Research Hub</a>
+  <span class="tn-crumb">WiFi-HR-Est &nbsp;/ &nbsp;<em>CSI Heart Rate · Build Log</em></span>
+</nav>
+
+<section class="hero">
+  <div class="hg"></div>
+  <div class="hsw"></div>
+  <div class="brkt tl"></div><div class="brkt tr"></div>
+  <div class="brkt bl"></div><div class="brkt br"></div>
+
+  <div class="h-eye">WiFi-HR-Est &nbsp;·&nbsp; CSI Sensing &nbsp;·&nbsp; Build Log 2026</div>
+  <h1>Contactless Heart Rate<br>via <em>WiFi CSI</em></h1>
+  <p class="h-sub">ESP32-S3 Channel State Information pipeline. DSP complete end-to-end. Bandpass 0.15–2Hz. Kalman filtered. Zero subjects validated against ground truth. Accuracy unknown.</p>
+
+  <div class="h-stats">
+    <div class="hs"><div class="hs-n" style="font-size:1rem;">ESP32-S3</div><div class="hs-l">Hardware</div></div>
+    <div class="hs"><div class="hs-n" style="font-size:1rem;">0.15–2<span style="font-size:.75rem;">Hz</span></div><div class="hs-l">Bandpass</div></div>
+    <div class="hs"><div class="hs-n">100<span style="font-size:.85rem;">Hz</span></div><div class="hs-l">Console Test</div></div>
+    <div class="hs"><div class="hs-n">0</div><div class="hs-l">Subjects Validated</div></div>
+  </div>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- SECTION 1 -->
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-c rv">Act 1 &nbsp;·&nbsp; The Concept</div>
+  <h2 class="act act-d rv">What is WiFi-HR-Est?</h2>
+  <p class="bd rv">Contactless heart rate and respiration rate estimation from WiFi Channel State Information (CSI). ESP32-S3 receivers capture how the WiFi channel changes as a human body moves, breathes, and pulses. Tiny chest-wall displacements from heartbeat and breathing modulate the multipath reflections — CSI captures those modulations.</p>
+  <br>
+  <p class="bd rv">Pivoted from camera-based approach for privacy. A camera in a bedroom or bathroom has a higher privacy cost than a WiFi receiver already present in the environment. The ESP32-S3 is a commodity device. No frame capture, no image data, no biometric inference from visual content. Just RF phase and amplitude fluctuations.</p>
+
+  <div class="fd fd-c rv">
+    <div class="fdl">Physics of CSI-HR</div>
+    <div class="fdb">WiFi CSI measures complex-valued channel response across subcarriers — amplitude and phase per carrier. Heartbeat chest-wall displacement is ~0.5–1mm. Breathing displacement is ~5–10mm. Both modulate the received signal's phase. The bandpass filter separates them: 0.15–0.4Hz respiration, 0.8–2Hz cardiac. The technique works; the question is how well it works in real environments with motion interference.</div>
+  </div>
+
+  <div class="fd fd-a rv">
+    <div class="fdl">Current state in one sentence</div>
+    <div class="fdb">The pipeline runs end-to-end and outputs a BPM number. Whether that BPM number is correct is unknown — no ECG, PPG, or chest-strap has been placed next to the system to check.</div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 2 -->
+<div class="bd-dm"></div>
+<section class="s-md">
+<div class="inn">
+  <div class="eye eye-c rv">Act 2 &nbsp;·&nbsp; DSP Pipeline</div>
+  <h2 class="act act-d rv">DSP pipeline — complete</h2>
+  <p class="bd rv">Full signal processing chain. All stages implemented. Parameters listed are current values — not theoretical optima.</p>
+
+  <div class="fd fd-c rv">
+    <div class="fdl">Pipeline stages</div>
+    <div class="fdb">
+      <div class="pipeline-row">
+        <span class="p-box">CSI packets</span>
+        <span class="p-arr">→</span>
+        <span class="p-box">subcarrier select</span>
+        <span class="p-arr">→</span>
+        <span class="p-box">bandpass 0.15–2Hz</span>
+        <span class="p-arr">→</span>
+        <span class="p-box">Hann window 256pt</span>
+        <span class="p-arr">→</span>
+        <span class="p-box">FFT</span>
+        <span class="p-arr">→</span>
+        <span class="p-box">peak detect</span>
+        <span class="p-arr">→</span>
+        <span class="p-box">smoothing</span>
+        <span class="p-arr">→</span>
+        <span class="p-box">Kalman</span>
+        <span class="p-arr">→</span>
+        <span class="p-box">BPM / RR</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="trm rv">
+    <div class="trm-bar">
+      <div class="dot" style="background:#f85149;"></div>
+      <div class="dot" style="background:#f0b429;"></div>
+      <div class="dot" style="background:#3fb950;"></div>
+      <span class="tfn">wifi_hr_est.py &nbsp;·&nbsp; DSP parameters</span>
+    </div>
+    <div class="tb">
+<span class="td"># ── Subcarrier selection ──────────────────────────────</span><br>
+<span class="tc">HR_SUBCARRIER</span><span class="td">    = 28 (auto-select) / 30 (espnow fixed)</span><br>
+<span class="tc">RR_SUBCARRIER</span><span class="td">    = 48</span><br><br>
+<span class="td"># ── Bandpass filter ───────────────────────────────────</span><br>
+<span class="tc">BANDPASS_LOW</span><span class="td">     = 0.15 Hz   # respiration low edge</span><br>
+<span class="tc">BANDPASS_HIGH</span><span class="td">    = 2.0 Hz    # cardiac high edge</span><br>
+<span class="tc">FILTER_ORDER</span><span class="td">     = 4         # Butterworth</span><br><br>
+<span class="td"># ── FFT ───────────────────────────────────────────────</span><br>
+<span class="tc">WINDOW_TYPE</span><span class="td">      = 'hann'</span><br>
+<span class="tc">WINDOW_SIZE</span><span class="td">      = 256       # samples</span><br><br>
+<span class="td"># ── Kalman filter ─────────────────────────────────────</span><br>
+<span class="tc">KALMAN_PROC_VAR</span><span class="td">  = 1e-3</span><br>
+<span class="tc">KALMAN_MEAS_VAR</span><span class="td">  = 1.0</span><br><br>
+<span class="td"># ── Presence detection ────────────────────────────────</span><br>
+<span class="tc">PRESENCE_THRESHOLD</span><span class="td"> = 1e-7   # variance threshold — BRITTLE</span><br>
+<span class="ta">⚠️ presence detection unreliable at this threshold</span>
+    </div>
+  </div>
+
+  <div class="fd fd-a rv">
+    <div class="fdl">Espnow variant note</div>
+    <div class="fdb">The espnow variant operates at 20Hz packet rate. Nyquist for 2Hz cardiac upper bound requires >4Hz minimum — 20Hz provides only 10x margin. This is technically sufficient but leaves little headroom for artifact rejection. The standard variant with auto-subcarrier selection at 100Hz is preferred for accuracy.</div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 3 -->
+<div class="bd-md"></div>
+<section class="s-dk">
+<div class="inn">
+  <div class="eye eye-r rv">Act 3 &nbsp;·&nbsp; Known Issues</div>
+  <h2 class="act act-d rv">Honest inventory — what does not work</h2>
+  <p class="bd rv">The pipeline compiles, runs, and produces output. That output has not been validated. These are not future risks — they are current gaps in the build.</p>
+
+  <div class="cap-g rv">
+    <div class="cp cp-no">
+      <div class="cp-ic">❌</div>
+      <div class="cp-nm">No ground truth validation</div>
+      <div class="cp-nt">No ECG, PPG, or chest-strap has been placed next to the system. BPM output exists; accuracy unknown.</div>
+    </div>
+    <div class="cp cp-no">
+      <div class="cp-ic">❌</div>
+      <div class="cp-nm">Zero subject-count study</div>
+      <div class="cp-nt">Single operator, indoor, static. No multi-subject test. No Bland-Altman analysis. No confidence interval.</div>
+    </div>
+    <div class="cp cp-no">
+      <div class="cp-ic">❌</div>
+      <div class="cp-nm">Presence detection brittle</div>
+      <div class="cp-nt">Variance threshold 1e-7 produces false positives in quiet rooms and false negatives with motion. No adaptive threshold implemented.</div>
+    </div>
+    <div class="cp cp-wn">
+      <div class="cp-ic">⚠️</div>
+      <div class="cp-nm">Espnow: 20Hz rate</div>
+      <div class="cp-nt">Nyquist margin for 2Hz cardiac signal is 10x. Technically valid. Leaves no room for artifact windowing.</div>
+    </div>
+    <div class="cp cp-wn">
+      <div class="cp-ic">⚠️</div>
+      <div class="cp-nm">Fixed subcarrier 30</div>
+      <div class="cp-nt">Subcarrier 30 selected empirically, not adaptive. Best subcarrier varies by environment and subject position. Auto-select (subcarrier 28 logic) not yet robust.</div>
+    </div>
+    <div class="cp cp-ok">
+      <div class="cp-ic">✅</div>
+      <div class="cp-nm">Pipeline runs end-to-end</div>
+      <div class="cp-nt">CSI → DSP → Kalman → BPM output. No runtime errors. Output is plausible (40–160 BPM range). Accuracy unknown.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 4 -->
+<div class="bd-dw"></div>
+<section class="s-wm">
+<div class="inn">
+  <div class="eye eye-t rv">Act 4 &nbsp;·&nbsp; Roadmap</div>
+  <h2 class="act act-w rv">Validation roadmap</h2>
+  <p class="bw rv">The DSP problem is solved. The validation problem is not started. These four steps convert the pipeline from "outputs a number" to "produces a defensible measurement."</p>
+
+  <div class="road-g rv">
+    <div class="road">
+      <div class="road-ic">STEP 1</div>
+      <div class="road-nm">PPG / chest-strap ground truth</div>
+      <div class="road-dt">Run WiFi-HR alongside a Polar H10 or equivalent. Log simultaneous time-series. First data point on accuracy.</div>
+    </div>
+    <div class="road">
+      <div class="road-ic">STEP 2</div>
+      <div class="road-nm">Multi-subject Bland-Altman</div>
+      <div class="road-dt">N ≥ 10 subjects. Bland-Altman plot for HR and RR. Report limits of agreement with 95% CI. This is the minimum bar for any accuracy claim.</div>
+    </div>
+    <div class="road">
+      <div class="road-ic">STEP 3</div>
+      <div class="road-nm">Motion / posture characterization</div>
+      <div class="road-dt">Systematic tests: sitting still, talking, typing, minor movement, standing. Map failure envelope. Know when the system is unreliable.</div>
+    </div>
+    <div class="road">
+      <div class="road-ic">STEP 4</div>
+      <div class="road-nm">HRV-EEG coherence</div>
+      <div class="road-dt">Cross-fuse WiFi-HR HRV output with S.H.R.A.V.Y.A EEG alpha coherence. Physiological relationship is well-established; measuring it at home is the novel contribution.</div>
+    </div>
+  </div>
+
+  <div class="fd fd-t rv">
+    <div class="fdl">Literature context</div>
+    <div class="fdb">CSI-based HR estimation has published precedent: Adib et al. (MIT 2015 Vital-Radio), Wang et al. (2017 E-eyes), multiple 2020–2024 papers on ESP32 CSI-HR. Reported MAE in controlled conditions: 1–5 BPM. In uncontrolled/moving environments: 5–15 BPM. This system makes no accuracy claim until Bland-Altman study complete.</div>
+  </div>
+</div>
+</section>
+
+<div class="bd-wd"></div>
+
+<footer>
+  <p style="margin-bottom:.45rem;">
+    <a href="research-hub.html">← Research Hub</a> &nbsp;·&nbsp;
+    <a href="https://github.com/rahuldeo2047" target="_blank" rel="noopener">GitHub @rahuldeo2047</a> &nbsp;·&nbsp;
+    <a href="https://www.linkedin.com/in/rahuldeo2047/" target="_blank" rel="noopener">LinkedIn</a>
+  </p>
+  <p style="margin-top:.5rem;">RD2047 Insights &nbsp;·&nbsp; WiFi-HR-Est &nbsp;·&nbsp; CSI Build Log 2026</p>
+</footer>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(!e.isIntersecting) return;
+    e.target.classList.add('vs');
+  });
+}, {threshold: 0.1});
+document.querySelectorAll('.rv').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
