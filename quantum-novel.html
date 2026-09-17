@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Untitled Quantum Novel | Work in Progress | RD2047 / The Final Observer</title>
-<meta name="description" content="A novel in progress: three founders, one home-built quantum machine, and the question of what they are really computing. Hard sci-fi from a builder who actually builds the hardware.">
+<title>The Quantum Minima: Beyond Classical | Hard Sci-Fi Techno-Thriller | RD2047 / The Final Observer</title>
+<meta name="description" content="A hard science-fiction techno-thriller set in Bengaluru's startup corridors — quantum computing, AI decision-ownership, and founders betting everything on a machine that may be thinking for itself. Actively serializing, free to read now.">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
 <script>
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
@@ -28,10 +28,10 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflo
 .hg{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle at 50% 40%,rgba(0,229,255,.10),transparent 50%);}
 @keyframes fup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 .h-eye{font-family:'Space Mono',monospace;font-size:.67rem;color:var(--cy);letter-spacing:.24em;text-transform:uppercase;margin-bottom:1.4rem;opacity:0;animation:fup .5s .2s forwards;}
-.hero h1{font-family:'Merriweather',serif;font-size:clamp(2rem,5.5vw,3.6rem);font-weight:700;color:#fff;line-height:1.1;max-width:820px;opacity:0;animation:fup .6s .4s forwards;}
+.hero h1{font-family:'Merriweather',serif;font-size:clamp(1.9rem,5vw,3.3rem);font-weight:700;color:#fff;line-height:1.15;max-width:860px;opacity:0;animation:fup .6s .4s forwards;}
 .hero h1 em{font-style:italic;color:var(--cy);font-weight:300;}
-.h-sub{margin-top:1.5rem;font-family:'Merriweather',serif;font-style:italic;font-size:1.05rem;color:rgba(255,255,255,.5);max-width:600px;line-height:1.85;opacity:0;animation:fup .6s .65s forwards;}
-.h-badge{margin-top:2.2rem;display:inline-flex;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--amb);border:1px solid rgba(217,119,6,.32);background:rgba(217,119,6,.06);padding:.5rem 1rem;border-radius:20px;opacity:0;animation:fup .6s .9s forwards;}
+.h-sub{margin-top:1.5rem;font-family:'Merriweather',serif;font-style:italic;font-size:1.05rem;color:rgba(255,255,255,.5);max-width:620px;line-height:1.85;opacity:0;animation:fup .6s .65s forwards;}
+.h-badge{margin-top:2.2rem;display:inline-flex;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#3fb950;border:1px solid rgba(63,185,80,.3);background:rgba(63,185,80,.06);padding:.5rem 1rem;border-radius:20px;opacity:0;animation:fup .6s .9s forwards;}
 .scroll-hint{position:absolute;bottom:1.8rem;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.18);font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.15em;animation:breathe 2.6s ease-in-out infinite;}
 @keyframes breathe{0%,100%{opacity:.25;}50%{opacity:.75;}}
 .s-dk{background:var(--dk);color:#e2e8f0;}.s-wm{background:var(--bg);color:var(--tx);}
@@ -49,16 +49,17 @@ h2.act-d{color:#fff;}h2.act-w{color:var(--tx);}
 .th{font-family:'JetBrains Mono',monospace;font-size:.78rem;padding:.45rem .9rem;border-radius:20px;border:1px solid rgba(0,229,255,.28);background:rgba(0,229,255,.05);color:#0891b2;}
 .s-dk .th{color:#67e8f9;}
 .pull{font-family:'Merriweather',serif;font-style:italic;font-size:1.25rem;line-height:1.7;color:#fff;border-left:3px solid var(--cy);padding:.5rem 0 .5rem 1.5rem;margin:2rem 0;}
-.prog{margin:2.2rem 0;}
-.prog-l{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.4);margin-bottom:.4rem;}
-.prog-bar{height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
-.prog-fill{height:100%;width:0;background:linear-gradient(90deg,var(--cy),var(--teal));border-radius:4px;transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+.fd{border-left:3px solid var(--amb);background:rgba(217,119,6,.06);padding:.95rem 1.35rem;border-radius:0 4px 4px 0;margin:1.6rem 0;}
+.fdl{font-family:'Space Mono',monospace;font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:.35rem;color:var(--amb);}
+.fdb{font-size:.87rem;line-height:1.7;color:#4a5568;}
+.s-dk .fdb{color:rgba(255,255,255,.6);}
 .cta{background:linear-gradient(135deg,rgba(0,229,255,.1),rgba(13,148,136,.06));border:1px solid rgba(0,229,255,.3);border-radius:8px;padding:2.6rem 1.8rem;text-align:center;max-width:680px;margin:0 auto;}
 .cta-t{font-family:'Merriweather',serif;font-size:1.4rem;color:#fff;font-weight:700;margin-bottom:.7rem;}
 .cta-d{font-size:.92rem;color:rgba(255,255,255,.5);line-height:1.8;max-width:520px;margin:0 auto 1.6rem;}
-.cta-btn{display:inline-flex;align-items:center;gap:.55rem;font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:600;background:var(--teal);color:#fff;text-decoration:none;padding:.85rem 1.6rem;border-radius:5px;transition:background .2s,transform .2s;}
+.cta-links{display:flex;flex-wrap:wrap;gap:.65rem;justify-content:center;margin-bottom:.5rem;}
+.cta-btn{display:inline-flex;align-items:center;gap:.55rem;font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;background:var(--teal);color:#fff;text-decoration:none;padding:.75rem 1.35rem;border-radius:5px;transition:background .2s,transform .2s;}
 .cta-btn:hover{background:#0b7d73;transform:translateY(-1px);}
-.cta-note{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.32);margin-top:1rem;}
+.cta-note{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.32);margin-top:1.1rem;}
 .rv{opacity:0;transform:translateY(20px);transition:opacity .55s,transform .55s;}
 .rv.vs{opacity:1;transform:translateY(0);}
 footer{background:var(--dk);padding:2.8rem 1.5rem;text-align:center;border-top:1px solid rgba(0,229,255,.1);}
@@ -70,79 +71,99 @@ footer a{color:rgba(0,229,255,.5);text-decoration:none;}footer a:hover{color:var
 <body>
 <nav class="top-nav">
   <a href="research-hub.html" class="tn-back"><i class="fas fa-arrow-left" style="font-size:.68rem;"></i> Research Hub</a>
-  <span class="tn-crumb">The Final Observer &nbsp;/ &nbsp;<em>Novel · In progress</em></span>
+  <span class="tn-crumb">The Final Observer &nbsp;/ &nbsp;<em>Novel · Serializing · Ch. 1 live</em></span>
 </nav>
 
 <section class="hero">
   <div class="hg"></div>
-  <div class="h-eye">Hard Sci-Fi &nbsp;·&nbsp; Work in Progress</div>
-  <h1>The <em>Quantum</em> Novel</h1>
-  <p class="h-sub">Three founders. One quantum machine built in a garage. And a slowly dawning question about what it is actually computing.</p>
-  <div class="h-badge"><i class="fas fa-pen-nib"></i> Being written · working title</div>
+  <div class="h-eye">Hard Sci-Fi Techno-Thriller &nbsp;·&nbsp; Serializing Now</div>
+  <h1>The Quantum <em>Minima</em>: Beyond Classical</h1>
+  <p class="h-sub">Peenya's power cuts, S.P. Road's spare parts, IISc's clean rooms — and a diamond defect that answers a question nobody finished asking. Three founders built a quantum machine on a startup's budget. They didn't build it to decide things on its own.</p>
+  <div class="h-badge"><i class="fas fa-bolt"></i> Ch. 1 "The Diamond Defect" live · new chapters Tue/Fri</div>
   <div class="scroll-hint">SCROLL</div>
 </section>
 
+<!-- WHAT IT IS -->
 <section class="s-dk">
 <div class="inn">
   <div class="eye rv">The Book</div>
-  <h2 class="act act-d rv">A startup, a machine, and the physics underneath</h2>
-  <p class="bd rv">The second novel follows a trio of founders building a do-it-yourself quantum machine — the kind of build I actually attempt in the lab, written by someone who knows where the wires go. It is about ambition, friendship under pressure, and the line between a computer and the thing it is modelling.</p>
+  <h2 class="act act-d rv">A startup wager against hard quantum physics</h2>
+  <p class="bd rv">The Quantum Minima: Beyond Classical is a hard science-fiction techno-thriller set in Bengaluru — a founder trio running a quantum-hardware build out of a Peenya workshop, sourcing what they can't afford on S.P. Road, and chasing the physics that gets taken seriously in IISc's clean rooms. It runs on the same operating logic that shapes real Indian startups: do more with less, decide fast, own what you decided. The story starts pulling at that logic the moment a piece of hardware starts making calls nobody coded into it.</p>
 
   <div class="themes rv">
-    <span class="th">DIY quantum machine</span>
-    <span class="th">quantum computing</span>
-    <span class="th">founder trio</span>
-    <span class="th">garage hardware</span>
-    <span class="th">ambition &amp; trust</span>
+    <span class="th">Bengaluru startup corridors</span>
+    <span class="th">tight-budget founder realism</span>
+    <span class="th">AI decision-ownership</span>
+    <span class="th">hard-SF quantum computing</span>
+    <span class="th">techno-thriller</span>
   </div>
 
-  <p class="pull rv">"They thought they were building a computer. The computer had other ideas about what counted as an answer."</p>
+  <p class="pull rv">"The defect wasn't a flaw. It was the first thing the diamond ever decided on its own."</p>
 
-  <p class="bd rv">Plot, characters, and where it lands stay unwritten in public — it isn't finished, and a teaser shouldn't spoil a book that doesn't exist yet. The grounding is real: this story leans on the same quantum builds documented elsewhere in this hub.</p>
+  <p class="bd rv">Where the defect leads, what the founders choose, and what "deciding" turns out to mean here stay on the page — that's what the serialized chapters are for. What's public is the shape: quantum computing that doesn't cut corners on the physics, wrapped around the question of who's really in control when the machine has an opinion.</p>
+</div>
+</section>
 
-  <div class="prog rv">
-    <div class="prog-l"><span>DRAFT PROGRESS</span><span>in progress</span></div>
-    <div class="prog-bar"><div class="prog-fill" id="pf" data-w="40"></div></div>
+<!-- STATUS -->
+<div class="bd-dw"></div>
+<section class="s-wm">
+<div class="inn">
+  <div class="eye rv" style="color:#0891b2;">Where It Is</div>
+  <h2 class="act act-w rv">Live now, one chapter at a time</h2>
+  <p class="bw rv">The Quantum Minima is actively serializing — no waiting for a finished manuscript or an agent's yes. Chapter 1, <em>"The Diamond Defect,"</em> is live. Chapter 2 is coming soon, and new chapters keep landing on a Tuesday/Friday cadence.</p>
+
+  <div class="fd rv">
+    <div class="fdl">Chapter cadence</div>
+    <div class="fdb">New chapters post Tuesdays and Fridays. Chapter 1, "The Diamond Defect," is live now — Chapter 2 is next.</div>
+  </div>
+
+  <div class="fd rv">
+    <div class="fdl">On authorship</div>
+    <div class="fdb">This novel is AI-generated, with human direction and editing throughout. Royal Road requires disclosure for AI-generated fiction and carries the mandatory "AI-Generated" tag on this title — stated here up front, not as a footnote.</div>
   </div>
 </div>
 </section>
 
+<!-- COMPANION BUILDS -->
+<div class="bd-wd"></div>
+<section class="s-dk">
+<div class="inn">
+  <div class="eye rv">Companion Builds</div>
+  <h2 class="act act-d rv">The fiction has a lab behind it</h2>
+  <p class="bd rv">The science isn't decoration. The quantum hardware documented elsewhere in this hub — the <a href="nv-quantum-requirements.html" style="color:#67e8f9;">NV-center build guide</a>, the <a href="safe-qc-system.html" style="color:#67e8f9;">hazard-free NMR quantum system</a>, and the <a href="consciousness-and-quantum-collapse-correlation-testing.html" style="color:#67e8f9;">live collapse-correlation experiment</a> — is the same physics the novel's machine is built on.</p>
+</div>
+</section>
+
+<!-- CTA: FREE READ LINKS -->
 <div class="bd-dw"></div>
 <section class="s-wm">
 <div class="inn">
-  <div class="eye rv" style="color:#0891b2;">Companion Builds</div>
-  <h2 class="act act-w rv">The fiction has a lab behind it</h2>
-  <p class="bw rv">The science isn't decoration. The quantum hardware in this hub — <a href="nv-quantum-requirements.html" style="color:#0d9488;">NV-center build guide</a>, <a href="safe-qc-system.html" style="color:#0d9488;">hazard-free NMR quantum</a>, and the <a href="consciousness-and-quantum-collapse-correlation-testing.html" style="color:#0d9488;">live collapse-correlation experiment</a> — is the same physics the novel is built on. Read the builds; meet the book's machine before it's named.</p>
+  <div class="cta rv" style="background:linear-gradient(135deg,rgba(0,229,255,.06),rgba(13,148,136,.04));">
+    <div class="cta-t" style="color:var(--tx);">Read it now — free</div>
+    <div class="cta-d" style="color:rgba(45,55,72,.7);">Chapter 1 is live and free to read across multiple platforms. Pick whichever you already use.</div>
+    <div class="cta-links">
+      <a class="cta-btn" href="https://www.royalroad.com/fiction/189775" target="_blank" rel="noopener"><i class="fas fa-scroll"></i> Royal Road</a>
+      <a class="cta-btn" href="https://www.wattpad.com/story/416151538-the-quantum-minima-beyond-classical" target="_blank" rel="noopener"><i class="fab fa-wattpad"></i> Wattpad</a>
+      <a class="cta-btn" href="https://www.inkitt.com/stories/1888449/chapters/1" target="_blank" rel="noopener"><i class="fas fa-book-open"></i> Inkitt</a>
+      <a class="cta-btn" href="https://www.booksie.com/787392-the-quantum-minima-beyond-classical-chapter-1" target="_blank" rel="noopener"><i class="fas fa-book"></i> Booksie</a>
+    </div>
+    <div class="cta-note" style="color:rgba(45,55,72,.45);">Also live on Stary Writing (app-only — no public web link yet).</div>
+  </div>
 </div>
 </section>
 
 <div class="bd-wd"></div>
-<section class="s-dk">
-<div class="inn">
-  <div class="cta rv">
-    <div class="cta-t">Want to know when it's done?</div>
-    <div class="cta-d">Email the author to be told when the first chapters or a beta draft open up — or if you're a writer/physicist who wants to compare notes on getting DIY-quantum fiction right.</div>
-    <a class="cta-btn" href="mailto:rahuldeo2047@gmail.com?subject=Quantum%20Novel%20%E2%80%94%20notify%20me">
-      <i class="fas fa-bell"></i> Notify me / talk shop
-    </a>
-    <div class="cta-note">rahuldeo2047@gmail.com</div>
-  </div>
-</div>
-</section>
-
-<div class="bd-dw"></div>
 <footer>
   <p style="margin-bottom:.45rem;">
     <a href="research-hub.html">← Research Hub</a> &nbsp;·&nbsp;
     <a href="perfect-imperfect.html">Perfect Imperfect</a> &nbsp;·&nbsp;
     <a href="mailto:rahuldeo2047@gmail.com">Contact</a>
   </p>
-  <p style="margin-top:.5rem;">RD2047 &nbsp;·&nbsp; The Final Observer &nbsp;·&nbsp; Quantum Novel · In progress · 2026</p>
+  <p style="margin-top:.5rem;">RD2047 &nbsp;·&nbsp; The Final Observer &nbsp;·&nbsp; The Quantum Minima: Beyond Classical · Serializing · 2026</p>
 </footer>
 <script>
-const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vs');const pf=e.target.querySelector?e.target.querySelector('#pf'):null;}});},{threshold:.1});
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vs');});},{threshold:.1});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
-window.addEventListener('load',()=>{const pf=document.getElementById('pf');if(pf)setTimeout(()=>{pf.style.width=pf.dataset.w+'%';},400);});
 </script>
 </body>
 </html>
