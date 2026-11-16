@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log Kya Kahenge | RD2047 / The Final Observer</title>
+<meta name="description" content="Log Kya Kahenge: What Will They Say, a self-help book by Rahul Deo. ISBN 978-93-345-1768-2. Launch links coming soon.">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8Y8EYHB278"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());gtag('config','G-8Y8EYHB278',{anonymize_ip:true});
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,300;0,700;1,300&family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf8f5;--tx:#2d3748;--teal:#0d9488;--amb:#d97706;--dk:#080c14;--cy:#00e5ff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflow-x:hidden;}
+.top-nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(8,12,20,.96);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(0,229,255,.12);padding:.65rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.tn-back{font-family:'Space Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.4);text-decoration:none;display:flex;align-items:center;gap:.5rem;transition:color .2s;}
+.tn-back:hover{color:var(--cy);}
+.tn-crumb{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.22);letter-spacing:.05em;}
+.tn-crumb em{color:var(--cy);font-style:normal;}
+.hero{min-height:100vh;background:var(--dk);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:7rem 1.5rem 5rem;position:relative;overflow:hidden;}
+.hg{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle at 50% 40%,rgba(0,229,255,.10),transparent 50%);}
+@keyframes fup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.h-eye{font-family:'Space Mono',monospace;font-size:.67rem;color:var(--cy);letter-spacing:.24em;text-transform:uppercase;margin-bottom:1.4rem;opacity:0;animation:fup .5s .2s forwards;}
+.hero h1{font-family:'Merriweather',serif;font-size:clamp(1.9rem,5vw,3.3rem);font-weight:700;color:#fff;line-height:1.15;max-width:860px;opacity:0;animation:fup .6s .4s forwards;}
+.hero h1 em{font-style:italic;color:var(--cy);font-weight:300;}
+.h-sub{margin-top:1.5rem;font-family:'Merriweather',serif;font-style:italic;font-size:1.05rem;color:rgba(255,255,255,.5);max-width:620px;line-height:1.85;opacity:0;animation:fup .6s .65s forwards;}
+.h-badge{margin-top:2.2rem;display:inline-flex;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#3fb950;border:1px solid rgba(63,185,80,.3);background:rgba(63,185,80,.06);padding:.5rem 1rem;border-radius:20px;opacity:0;animation:fup .6s .9s forwards;}
+.scroll-hint{position:absolute;bottom:1.8rem;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.18);font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.15em;animation:breathe 2.6s ease-in-out infinite;}
+@keyframes breathe{0%,100%{opacity:.25;}50%{opacity:.75;}}
+.s-dk{background:var(--dk);color:#e2e8f0;}.s-wm{background:var(--bg);color:var(--tx);}
+section{padding:4.5rem 1.5rem;}
+.bd-dw{height:55px;background:linear-gradient(to bottom,var(--dk),var(--bg));}
+.bd-wd{height:55px;background:linear-gradient(to bottom,var(--bg),var(--dk));}
+.inn{max-width:760px;margin:0 auto;}
+.eye{font-family:'Space Mono',monospace;font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;margin-bottom:.65rem;color:var(--cy);}
+h2.act{font-family:'Merriweather',serif;font-size:clamp(1.5rem,3vw,2.2rem);font-weight:700;line-height:1.17;margin-bottom:1.2rem;}
+h2.act-d{color:#fff;}h2.act-w{color:var(--tx);}
+.bd{font-size:.98rem;line-height:1.9;color:rgba(255,255,255,.55);}
+.bw{font-size:.98rem;line-height:1.9;color:#4a5568;}
+.bw em,.bd em{color:#0891b2;font-style:italic;}
+.themes{display:flex;flex-wrap:wrap;gap:.6rem;margin:2rem 0;}
+.th{font-family:'JetBrains Mono',monospace;font-size:.78rem;padding:.45rem .9rem;border-radius:20px;border:1px solid rgba(0,229,255,.28);background:rgba(0,229,255,.05);color:#0891b2;}
+.s-dk .th{color:#67e8f9;}
+.pull{font-family:'Merriweather',serif;font-style:italic;font-size:1.25rem;line-height:1.7;color:#fff;border-left:3px solid var(--cy);padding:.5rem 0 .5rem 1.5rem;margin:2rem 0;}
+.fd{border-left:3px solid var(--amb);background:rgba(217,119,6,.06);padding:.95rem 1.35rem;border-radius:0 4px 4px 0;margin:1.6rem 0;}
+.fdl{font-family:'Space Mono',monospace;font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:.35rem;color:var(--amb);}
+.fdb{font-size:.87rem;line-height:1.7;color:#4a5568;}
+.s-dk .fdb{color:rgba(255,255,255,.6);}
+.cta{background:linear-gradient(135deg,rgba(0,229,255,.1),rgba(13,148,136,.06));border:1px solid rgba(0,229,255,.3);border-radius:8px;padding:2.6rem 1.8rem;text-align:center;max-width:680px;margin:0 auto;}
+.cta-t{font-family:'Merriweather',serif;font-size:1.4rem;color:#fff;font-weight:700;margin-bottom:.7rem;}
+.cta-d{font-size:.92rem;color:rgba(255,255,255,.5);line-height:1.8;max-width:520px;margin:0 auto 1.6rem;}
+.cta-links{display:flex;flex-wrap:wrap;gap:.65rem;justify-content:center;margin-bottom:.5rem;}
+.cta-btn{display:inline-flex;align-items:center;gap:.55rem;font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;background:var(--teal);color:#fff;text-decoration:none;padding:.75rem 1.35rem;border-radius:5px;transition:background .2s,transform .2s;}
+.cta-btn:hover{background:#0b7d73;transform:translateY(-1px);}
+.cta-note{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.32);margin-top:1.1rem;}
+.rv{opacity:0;transform:translateY(20px);transition:opacity .55s,transform .55s;}
+.rv.vs{opacity:1;transform:translateY(0);}
+footer{background:var(--dk);padding:2.8rem 1.5rem;text-align:center;border-top:1px solid rgba(0,229,255,.1);}
+footer p{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:rgba(255,255,255,.5);}
+footer a{color:rgba(0,229,255,.5);text-decoration:none;}footer a:hover{color:var(--cy);}
+@media(max-width:600px){.top-nav{padding:.65rem 1rem;}}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="novels.html" class="tn-back"><i class="fas fa-arrow-left" style="font-size:.68rem;"></i> All Novels</a>
+  <span class="tn-crumb">The Final Observer &nbsp;/ &nbsp;<em>Coming soon</em></span>
+</nav>
+<section class="hero">
+  <div class="hg"></div>
+  <div class="h-eye">Non-fiction self-help &nbsp;·&nbsp; Coming soon</div>
+  <h1>Log Kya <em>Kahenge</em></h1>
+  <p class="h-sub">What Will They Say: Breaking Free From the Opinions That Run Your Life.</p>
+  <div class="h-badge"><i class="fas fa-clock"></i> Launch links go live soon · ISBN 978-93-345-1768-2</div>
+</section>
+<section class="s-dk">
+<div class="inn">
+  <div class="eye rv">The Book</div>
+  <h2 class="act act-d rv">Breaking free from the opinions that run your life</h2>
+  <p class="bd rv">A practical book on the question that quietly runs a lot of Indian lives: what will people say? Details, cover and reading links arrive at launch.</p>
+  <div class="fd rv">
+    <div class="fdl">ISBN</div>
+    <div class="fdb">978-93-345-1768-2 · by Rahul Deo (RD2047) · English · First edition 2026.</div>
+  </div>
+</div>
+</section>
+<div class="bd-dw"></div>
+<section class="s-wm">
+<div class="inn">
+  <div class="cta rv" style="background:linear-gradient(135deg,rgba(0,229,255,.06),rgba(13,148,136,.04));">
+    <div class="cta-t" style="color:var(--tx);">Be first when it goes live</div>
+    <div class="cta-d" style="color:rgba(45,55,72,.7);">Store and reading links appear on this page at launch. Email to be told the moment they do.</div>
+    <div class="cta-links">
+      <a class="cta-btn" href="mailto:rahuldeo2047@gmail.com?subject=Notify%20me%3A%20Log%20Kya%20Kahenge"><i class="fas fa-envelope"></i> Notify me</a>
+      <!-- GO-LIVE-LINKS: add store/read buttons here at launch -->
+    </div>
+    <div class="cta-note" style="color:rgba(45,55,72,.45);">Meanwhile: <a href="quantum-novel.html">The Quantum Minima</a> (Book 1) is free to read now.</div>
+  </div>
+</div>
+</section>
+<div class="bd-wd"></div>
+<footer>
+  <p style="margin-bottom:.45rem;"><a href="novels.html">← All Novels</a> &nbsp;·&nbsp; <a href="quantum-novel.html">The Quantum Minima</a> &nbsp;·&nbsp; <a href="mailto:rahuldeo2047@gmail.com">Contact</a></p>
+  <p style="margin-top:.5rem;">RD2047 &nbsp;·&nbsp; The Final Observer &nbsp;·&nbsp; Log Kya Kahenge · ISBN 978-93-345-1768-2 · 2026</p>
+</footer>
+<script>
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vs');});},{threshold:.1});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
